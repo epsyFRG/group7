@@ -26,7 +26,9 @@ public class Indirizzo {
     @Max(99999)
     private int cap;
 
-    private String comune;
+    @ManyToOne
+    @JoinColumn(name = "comune_id", nullable = false)
+    private Comune comune;
 
     @Enumerated(EnumType.STRING)
     private TipoIndirizzo tipoIndirizzo;
