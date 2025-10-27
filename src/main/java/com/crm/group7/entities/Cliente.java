@@ -31,7 +31,7 @@ public class Cliente {
     private String logoAziendale;
     @ManyToOne
     @JoinColumn(name = "id_utente")
-    private Utente utenti;
+    private Utente utente;
 
     public Cliente(RagioneSociale ragioneSociale, String partitaIva, LocalDate dataInserimento, LocalDate dataUltimoContatto, double fatturatoAnnuale, String pec, String telefono, String emailContatto, String nomeContatto, String telefonoContatto) {
         this.ragioneSociale = ragioneSociale;
