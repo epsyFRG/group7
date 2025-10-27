@@ -1,5 +1,6 @@
 package com.crm.group7.entities;
 
+import com.crm.group7.entities.Cliente;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
