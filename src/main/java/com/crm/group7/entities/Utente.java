@@ -6,10 +6,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name="Utente")
+@Table(name = "Utente")
 @Getter
 @Setter
 @ToString
@@ -25,11 +27,10 @@ public class Utente {
 
     private String nome;
     private String cognome;
-    private String  avatarURL;
+    private String avatarURL;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="ruolo_id",nullable = false)
-    private Ruolo ruolo;
+    @ManyToMany(mappedBy = "utenti", fetch = FetchType.LAZY)
+    private List<Ruolo> ruoli = new ArrayList<>();
 
     public Utente(String email, String password, String nome, String cognome) {
         this.email = email;
