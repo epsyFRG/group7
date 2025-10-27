@@ -25,7 +25,7 @@ public class StatoFattura {
     private String stato;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "idStato")
+    @OneToMany(mappedBy = "stato")
     private List<Fattura> fatture;
 
     public StatoFattura(String stato) {

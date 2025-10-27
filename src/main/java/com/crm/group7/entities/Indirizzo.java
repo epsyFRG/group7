@@ -2,11 +2,16 @@ package com.crm.group7.entities;
 
 import com.crm.group7.entities.enums.TipoIndirizzo;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.*;
+
 import java.util.UUID;
 
 @Entity
+@Table(name = "indirizzo", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"id_cliente", "tipo_indirizzo"})
+})
 @Getter
 @Setter
 @NoArgsConstructor

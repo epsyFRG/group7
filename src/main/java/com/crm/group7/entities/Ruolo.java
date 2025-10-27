@@ -24,12 +24,7 @@ public class Ruolo {
     @Column(unique = true, nullable = false)
     private String nome;
 
-    @ManyToMany
-    @JoinTable(
-            name = "ruolo_utente",
-            joinColumns = @JoinColumn(name = "ruolo_id"),
-            inverseJoinColumns = @JoinColumn(name = "utente_id")
-    )
+    @ManyToMany(mappedBy = "ruoli")
     private List<Utente> utenti = new ArrayList<>();
 
     public Ruolo(String nome) {

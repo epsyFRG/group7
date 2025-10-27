@@ -18,7 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Utente {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue
     private UUID id;
     @Column(unique = true, nullable = false)
     private String email;
@@ -29,7 +29,12 @@ public class Utente {
     private String cognome;
     private String avatarURL;
 
-    @ManyToMany(mappedBy = "utenti", fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "RuoloUtente",
+            joinColumns = @JoinColumn(name = "idUtente"),
+            inverseJoinColumns = @JoinColumn(name = "idRuolo")
+    )
     private List<Ruolo> ruoli = new ArrayList<>();
 
     public Utente(String email, String password, String nome, String cognome) {

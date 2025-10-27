@@ -1,6 +1,5 @@
 package com.crm.group7.entities;
 
-import com.crm.group7.entities.Cliente;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,17 +31,17 @@ public class Fattura {
 
     @ManyToOne
     @JoinColumn(name = "id_cliente", nullable = false)
-    private Cliente idCliente;
+    private Cliente cliente;
 
     @ManyToOne
     @JoinColumn(name = "id_stato", nullable = false)
-    private StatoFattura idStato;
+    private StatoFattura stato;
 
-    public Fattura(LocalDate data, Double importo, Long numero, Cliente idCliente, StatoFattura idStato) {
+    public Fattura(LocalDate data, Double importo, Long numero, Cliente cliente, StatoFattura stato) {
         this.data = data;
         this.importo = importo;
         this.numero = numero;
-        this.idCliente = idCliente;
-        this.idStato = idStato;
+        this.cliente = cliente;
+        this.stato = stato;
     }
 }

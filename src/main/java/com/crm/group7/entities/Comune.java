@@ -6,6 +6,9 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
+@Table(name = "comune", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"nome", "provincia_id"})
+})
 @NoArgsConstructor
 @Getter
 @Setter
