@@ -24,4 +24,8 @@ public class Comune {
     @ManyToOne
     @JoinColumn(name = "provincia_id", nullable = false)
     private Provincia provincia;
+
+    private String codiceProvinciaStorico;
+
+    private String progressivoComune;
 }
