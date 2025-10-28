@@ -57,7 +57,7 @@ public class FatturaService {
             throw new BadRequestException("Esiste già una fattura con numero: " + fatturaAggiornata.getNumero());
         }
         if (fatturaAggiornata.getImporto() <= 0) {
-            throw new BadRequestException("L'importo della fattura deve essere maggiore di zero!");
+            throw new BadRequestException("L'importo della fattura deve essere maggiore di zero");
         }
 
         fatturaEsistente.setData(fatturaAggiornata.getData());
