@@ -4,6 +4,7 @@ import com.crm.group7.entities.Cliente;
 import com.crm.group7.exceptions.NotFoundException;
 import com.crm.group7.payloads.ClienteDTO;
 import com.crm.group7.repositories.ClienteRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -12,12 +13,8 @@ import java.util.UUID;
 
 @Service
 public class ClienteService {
-
-    private final ClienteRepository clienteRepository;
-
-    public ClienteService(ClienteRepository clienteRepository) {
-        this.clienteRepository = clienteRepository;
-    }
+    @Autowired
+    private ClienteRepository clienteRepository;
 
     // CREATE
     public Cliente saveCliente(ClienteDTO dto) {
@@ -80,7 +77,7 @@ public class ClienteService {
     }
 
     private Cliente mapToEntity(ClienteDTO payload) {
-        Cliente cliente= new Cliente();
+        Cliente cliente = new Cliente();
         cliente.setRagioneSociale(payload.ragioneSociale());
         cliente.setPartitaIva(payload.partitaIva());
         cliente.setDataInserimento(payload.dataInserimento());
