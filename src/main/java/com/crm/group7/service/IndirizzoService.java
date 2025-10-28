@@ -42,8 +42,7 @@ public class IndirizzoService {
     }
 
     public Indirizzo findIndirizzoById(UUID indirizzoId) {
-        return indirizzoRepository.findById(indirizzoId)
-                .orElseThrow(() -> new NotFoundException(indirizzoId));
+        return indirizzoRepository.findById(indirizzoId).orElseThrow(() -> new NotFoundException(indirizzoId));
     }
 
     // UPDATE <- modifica di un indirizzo specifico tramite ID
