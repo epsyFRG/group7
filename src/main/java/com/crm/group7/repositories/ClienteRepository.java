@@ -10,6 +10,7 @@ import java.util.UUID;
 
 @Repository
 public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
+    List<Cliente> findAllByNomeContatto(String nomeContatto);
 
     List<Cliente> findAllByFatturatoAnnualeGreaterThan(double fatturato);
 

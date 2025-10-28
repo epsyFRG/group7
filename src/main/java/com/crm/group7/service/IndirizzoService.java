@@ -7,7 +7,10 @@ import com.crm.group7.exceptions.BadRequestException;
 import com.crm.group7.exceptions.NotFoundException;
 import com.crm.group7.repositories.IndirizzoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -17,10 +20,6 @@ import java.util.UUID;
 public class IndirizzoService {
     @Autowired
     private IndirizzoRepository indirizzoRepository;
-
-    public IndirizzoService(IndirizzoRepository indirizzoRepository) {
-        this.indirizzoRepository = indirizzoRepository;
-    }
 
     // CREATE <- creazione di un nuovo indirizzo
     public Indirizzo saveIndirizzo(Indirizzo indirizzo) {
@@ -42,8 +41,7 @@ public class IndirizzoService {
     }
 
     public Indirizzo findIndirizzoById(UUID indirizzoId) {
-        return indirizzoRepository.findById(indirizzoId)
-                .orElseThrow(() -> new NotFoundException(indirizzoId));
+        return indirizzoRepository.findById(indirizzoId).orElseThrow(() -> new NotFoundException(indirizzoId));
     }
 
     // UPDATE <- modifica di un indirizzo specifico tramite ID
