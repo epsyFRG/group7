@@ -26,10 +26,12 @@ public class ImportazioneAnagraficaService {
         this.comuneRepository = comuneRepository;
     }
 
+    //    Qualche errore che si trova spesso su Excel
     private static final Set<String> EXCEL_ERROR_STRINGS = Set.of(
             "#RIF!", "#VALORE!", "#NOME?", "#NUM!", "#DIV/0!", "#N/D"
     );
 
+    //    Se la stringa pulita corrisponde a un errore, la funzione restituisce null, per esempio nel caso di Sassari. Altrimenti, restituisce il valore originale non modificato.
     private static String cleanIfExcelError(String value) {
         if (value == null) {
             return null;
@@ -42,18 +44,15 @@ public class ImportazioneAnagraficaService {
         return value;
     }
 
+    //    Questo mi serve per standardizzare i nomi con una mappa dichiarata final
     private static final Map<String, String> PROVINCE_CORRECTION_MAP;
 
     static {
         Map<String, String> corrections = new HashMap<>();
 
-        corrections.put("MASSA CARRARA", "Massa-Carrara");
         corrections.put("BOLZANO/BOZEN", "Bolzano");
-        corrections.put("AOSTA", "Aosta");
         corrections.put("REGGIO NELL'EMILIA", "Reggio-Emilia");
         corrections.put("F. BARLETTA-ANDRIA-TRANI", "Barletta-Andria-Trani");
-
-        // CORREZIONI AGGIUNTE DAL LOG
         corrections.put("VERBANO-CUSIO-OSSOLA", "Verbania");
         corrections.put("VALLE D'AOSTA/VALLÉE D'AOSTE", "Aosta");
         corrections.put("MONZA E DELLA BRIANZA", "Monza-Brianza");
@@ -85,7 +84,7 @@ public class ImportazioneAnagraficaService {
         Map<String, Provincia> provinceMap = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
 
-            br.readLine(); // Salta l'intestazione
+            br.readLine();
 
             String line;
             while ((line = br.readLine()) != null) {
@@ -98,22 +97,21 @@ public class ImportazioneAnagraficaService {
 
                 String sigla;
 
-                // 1. Logica di correzione SIGLA per anomalie di lunghezza
+                // 1. Logica anomalie
                 if (inputSigla.length() > 2) {
                     if (inputSigla.equalsIgnoreCase("Roma") && nome.equalsIgnoreCase("Roma")) {
                         sigla = "RM";
                     } else if (inputSigla.equalsIgnoreCase("Valle d'Aosta")) {
                         sigla = "AO";
                     } else {
-                        // Sigla anomala > 2 caratteri non gestita: Forziamo la sigla, ma è un caso limite
-                        System.err.println("ATTENZIONE CRITICA: Sigla anomala > 2 caratteri trovata: '" + inputSigla + "'. Forzando sigla a 2 caratteri.");
+                        System.err.println("Sigla anomala > 2 caratteri trovata: '" + inputSigla + "'. Forzando sigla a 2 caratteri.");
                         sigla = inputSigla.substring(0, 2);
                     }
                 } else {
                     sigla = inputSigla;
                 }
 
-                // 2. Controllo Duplicati e Salvataggio: cerca prima di salvare
+                // 2. Controllo Duplicati e Salvataggio
                 Provincia p;
 
                 Provincia existing = provinciaRepository.findByNome(nome).orElse(null);
@@ -137,11 +135,11 @@ public class ImportazioneAnagraficaService {
         return provinceMap;
     }
 
-    // Nel metodo importaComuni:
+    // ImportaComuni:
     private void importaComuni(String filePath, Map<String, Provincia> provinceCache) {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
 
-            br.readLine(); // Salta l'intestazione
+            br.readLine();
 
             String line;
             int lineCount = 1;
@@ -183,7 +181,7 @@ public class ImportazioneAnagraficaService {
                     c.setProvincia(provincia);
                     comuneRepository.save(c);
                 } else {
-                    System.err.printf("ERRORE: Riga %d saltata a causa di Provincia mancante o Nome Comune non valido.%n", lineCount);
+                    System.err.printf("Errore: Riga %d saltata a causa di Provincia mancante o Nome Comune non valido.%n", lineCount);
                 }
                 lineCount++;
             }
