@@ -52,14 +52,9 @@ public class UtenteService {
 
         Utente newUtente = new Utente(payload.username(), payload.email(), bcrypt.encode(payload.password()), payload.nome(), payload.cognome());
         newUtente.setAvatarURL("https://ui-avatars.com/api/?name=" + payload.nome());
-        // --- CORREZIONE ---
-        // Cerca Ruoli.USER (non UTENTE) per corrispondere a @PreAuthorize
         Ruolo userRole = ruoloRepository.findByRuolo(Ruoli.UTENTE)
-                .orElseThrow(() -> new RuntimeException("Ruolo 'USER' non trovato! Assicurati di averlo nel database."));
-
-        // Assegna il ruolo al nuovo utente
+                .orElseThrow(() -> new RuntimeException("Ruolo 'USER' non trovato!"));
         newUtente.setRuoli(List.of(userRole));
-        // --- FINE CORREZIONE -
         Utente savedUtente = this.utenteRepository.save(newUtente);
 
         log.info("Il dipendente con id: " + savedUtente.getId() + " è stato salvato correttamente");

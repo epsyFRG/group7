@@ -22,8 +22,6 @@ public class ClienteController {
     @Autowired
     private ClienteService clienteService;
 
-    // --- CRUD STANDARD CON SICUREZZA ---
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyAuthority('ADMIN', 'UTENTE')")
@@ -64,8 +62,8 @@ public class ClienteController {
     // "abilitato alle sole operazioni di lettura"
     @PreAuthorize("hasAnyAuthority('ADMIN', 'UTENTE')")
     public Page<Cliente> getClientiConFiltri(
-            // ... (parametri di filtro, paginazione, ordinamento) ...
-// --- Parametri di Filtro ---
+
+            // --- Parametri di Filtro ---
             @RequestParam(required = false) Double minFatturato,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInserimentoAfter,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataUltimoContattoBefore,
