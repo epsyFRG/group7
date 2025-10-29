@@ -80,7 +80,7 @@ public class FatturaService {
     public Page<Fattura> findByFiltri(UUID idCliente, UUID idStato, LocalDate data, Integer anno,
                                       Double minImporto, Double maxImporto, Pageable pageable) {
 
-        Specification<Fattura> spec = Specification.where(null);
+        Specification<Fattura> spec = Specification.allOf();
         if (idCliente != null) {
             spec = spec.and((root, query, cb) ->
                     cb.equal(root.get("cliente").get("idCliente"), idCliente));
