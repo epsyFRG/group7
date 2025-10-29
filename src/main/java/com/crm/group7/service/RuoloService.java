@@ -2,6 +2,7 @@ package com.crm.group7.service;
 
 
 import com.crm.group7.entities.Ruolo;
+import com.crm.group7.entities.enums.Ruoli;
 import com.crm.group7.exceptions.BadRequestException;
 import com.crm.group7.exceptions.NotFoundException;
 import com.crm.group7.repositories.RuoloRepository;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -21,11 +23,11 @@ public class RuoloService {
     private RuoloRepository ruoloRepository;
 
     public Ruolo save(Ruolo ruolo) {
-        if (ruoloRepository.findByNome(ruolo.getNome()).isPresent()) {
-            throw new BadRequestException("Il ruolo " + ruolo.getNome() + " esiste già");
+        if (ruoloRepository.findByRuolo(ruolo.getRuolo()).isPresent()) {
+            throw new BadRequestException("Il ruolo " + ruolo.getRuolo() + " esiste già");
         }
         Ruolo savedRuolo = ruoloRepository.save(ruolo);
-        log.info("Ruolo '{}' creato con successo con l'id: {}", savedRuolo.getNome(), savedRuolo.getId());
+        log.info("Ruolo '{}' creato con successo con l'id: {}", savedRuolo.getRuolo(), savedRuolo.getId());
         return savedRuolo;
     }
 
@@ -41,21 +43,23 @@ public class RuoloService {
     }
 
     public Ruolo findByNome(String nome) {
-        return ruoloRepository.findByNome(nome)
+        Ruoli ruolo;
+        ruolo = Ruoli.valueOf(nome.toUpperCase());
+        return ruoloRepository.findByRuolo(ruolo)
                 .orElseThrow(() -> new NotFoundException("Ruolo '" + nome + "' non trovato"));
     }
 
     public Ruolo update(UUID id, Ruolo ruoloAggiornato) {
         Ruolo ruoloEsistente = this.findById(id);
 
-        if (!ruoloEsistente.getNome().equals(ruoloAggiornato.getNome()) &&
-                ruoloRepository.findByNome(ruoloAggiornato.getNome()).isPresent()) {
-            throw new BadRequestException("Il ruolo '" + ruoloAggiornato.getNome() + "' esiste già");
+        if (!ruoloEsistente.getRuolo().equals(ruoloAggiornato.getRuolo()) &&
+                ruoloRepository.findByRuolo(ruoloAggiornato.getRuolo()).isPresent()) {
+            throw new BadRequestException("Il ruolo '" + ruoloAggiornato.getRuolo() + "' esiste già");
         }
 
-        ruoloEsistente.setNome(ruoloAggiornato.getNome());
+        ruoloEsistente.setRuolo(ruoloAggiornato.getRuolo());
         Ruolo ruoloModificato = ruoloRepository.save(ruoloEsistente);
-        log.info("Ruolo con ID {} aggiornato a '{}'", id, ruoloModificato.getNome());
+        log.info("Ruolo con ID {} aggiornato a '{}'", id, ruoloModificato.getRuolo());
         return ruoloModificato;
     }
 
@@ -63,11 +67,11 @@ public class RuoloService {
         Ruolo ruolo = this.findById(id);
 
         if (!ruolo.getUtenti().isEmpty()) {
-            throw new BadRequestException("Impossibile eliminare il ruolo '" + ruolo.getNome() +
+            throw new BadRequestException("Impossibile eliminare il ruolo '" + ruolo.getRuolo() +
                     "' perché è assegnato a " + ruolo.getUtenti().size() + " utenti");
         }
 
         ruoloRepository.delete(ruolo);
-        log.info("Ruolo '{}' con ID {} eliminato con successo", ruolo.getNome(), id);
+        log.info("Ruolo '{}' con ID {} eliminato con successo", ruolo.getRuolo(), id);
     }
 }

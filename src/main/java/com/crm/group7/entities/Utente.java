@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "Utente")
@@ -53,17 +54,14 @@ public class Utente implements UserDetails {
         // Questo metodo vogliamo che restituisca una lista di Authorities, cioè dei ruoli dell'utente
         // SimpleGrantedAuthority è una classe che implementa GrantedAuthority e ci serve per convertire il ruolo dell'utente
         // che nel nostro caso è un enum in un oggetto utilizzabile dai meccanismi di Spring Security
-        return List.of(new SimpleGrantedAuthority(this.ruoli.name()));
-    }
-
-    @Override
-    public String getEmail() {
-        return this.email;
+        return this.ruoli.stream()
+                .map(ruolo -> new SimpleGrantedAuthority(ruolo.getRuolo().name()))
+                .collect(Collectors.toList());
     }
 
     @Override
     public String getUsername() {
-        return this.username;
+        return this.email;
     }
 }
 
