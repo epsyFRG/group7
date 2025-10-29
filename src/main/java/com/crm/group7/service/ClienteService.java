@@ -91,4 +91,6 @@ public class ClienteService {
         cliente.setLogoAziendale(payload.logoAziendale());
         return cliente;
     }
+
+
 }
