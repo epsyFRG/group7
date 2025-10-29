@@ -1,7 +1,12 @@
 package com.crm.group7.payloads;
 
 import com.crm.group7.entities.enums.TipoIndirizzo;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+import java.util.UUID;
 
 public record IndirizzoDTO(
         @NotBlank(message = "Inserire la via è obbligatorio!")
@@ -20,5 +25,9 @@ public record IndirizzoDTO(
         Integer cap,
 
         @NotNull(message = "Il tipo di indirizzo è obbligatorio!")
-        TipoIndirizzo tipoIndirizzo
-) {}
+        TipoIndirizzo tipoIndirizzo,
+
+        @NotNull(message = "L'ID del comune è obbligatorio per salvare l'indirizzo!")
+        UUID comuneId // L'ID del comune a cui questo indirizzo è associato
+) {
+}

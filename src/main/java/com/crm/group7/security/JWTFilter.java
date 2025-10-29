@@ -29,7 +29,6 @@ public class JWTFilter extends OncePerRequestFilter {
     @Autowired
     private UtenteService utenteService;
 
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // Questo metodo verrà eseguito ad ogni richiesta. Sarà lui a dover verificare il token

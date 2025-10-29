@@ -4,6 +4,8 @@ import com.crm.group7.entities.Cliente;
 import com.crm.group7.entities.Indirizzo;
 import com.crm.group7.entities.enums.TipoIndirizzo;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,4 +21,8 @@ public interface IndirizzoRepository extends JpaRepository<Indirizzo, UUID> {
     List<Indirizzo> findAllByLocalita(String localita);
 
     Optional<Indirizzo> findByCivico(int civico);
+    
+    @Modifying
+    @Transactional
+    void deleteByCliente(Cliente cliente);
 }

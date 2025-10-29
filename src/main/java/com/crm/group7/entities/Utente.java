@@ -1,5 +1,6 @@
 package com.crm.group7.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -36,12 +37,13 @@ public class Utente implements UserDetails {
     private String cognome;
     private String avatarURL;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "RuoloUtente",
             joinColumns = @JoinColumn(name = "idUtente"),
             inverseJoinColumns = @JoinColumn(name = "idRuolo")
     )
+    @JsonIgnore
     private List<Ruolo> ruoli = new ArrayList<>();
 
     public Utente(String username, String email, String password, String nome, String cognome) {

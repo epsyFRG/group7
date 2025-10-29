@@ -1,10 +1,13 @@
 package com.crm.group7.entities;
 
 import com.crm.group7.entities.enums.RagioneSociale;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -29,9 +32,10 @@ public class Cliente {
     private String nomeContatto;
     private String telefonoContatto;
     private String logoAziendale;
-    @ManyToOne
-    @JoinColumn(name = "id_utente")
-    private Utente utente;
+    @JsonManagedReference
+    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<Indirizzo> indirizzi = new ArrayList<>();
 
     public Cliente(RagioneSociale ragioneSociale, String partitaIva, LocalDate dataInserimento, LocalDate dataUltimoContatto, double fatturatoAnnuale, String pec, String telefono, String emailContatto, String nomeContatto, String telefonoContatto) {
         this.ragioneSociale = ragioneSociale;

@@ -1,6 +1,7 @@
 package com.crm.group7.entities;
 
 import com.crm.group7.entities.enums.TipoIndirizzo;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -38,7 +39,9 @@ public class Indirizzo {
     @Enumerated(EnumType.STRING)
     private TipoIndirizzo tipoIndirizzo;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "id_cliente", nullable = false)
+    @ToString.Exclude
     private Cliente cliente;
 }

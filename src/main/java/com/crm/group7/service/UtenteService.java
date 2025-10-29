@@ -1,15 +1,19 @@
 package com.crm.group7.service;
 
+import com.crm.group7.entities.Ruolo;
 import com.crm.group7.entities.Utente;
+import com.crm.group7.entities.enums.Ruoli;
 import com.crm.group7.exceptions.BadRequestException;
 import com.crm.group7.exceptions.NotFoundException;
 import com.crm.group7.payloads.UtenteDTO;
+import com.crm.group7.repositories.RuoloRepository;
 import com.crm.group7.repositories.UtenteRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -25,6 +29,9 @@ public class UtenteService {
 //    private Cloudinary imageUploader;
     @Autowired
     private PasswordEncoder bcrypt;
+
+    @Autowired
+    private RuoloRepository ruoloRepository;
 
     //
 //
@@ -45,7 +52,14 @@ public class UtenteService {
 
         Utente newUtente = new Utente(payload.username(), payload.email(), bcrypt.encode(payload.password()), payload.nome(), payload.cognome());
         newUtente.setAvatarURL("https://ui-avatars.com/api/?name=" + payload.nome());
+        // --- CORREZIONE ---
+        // Cerca Ruoli.USER (non UTENTE) per corrispondere a @PreAuthorize
+        Ruolo userRole = ruoloRepository.findByRuolo(Ruoli.UTENTE)
+                .orElseThrow(() -> new RuntimeException("Ruolo 'USER' non trovato! Assicurati di averlo nel database."));
 
+        // Assegna il ruolo al nuovo utente
+        newUtente.setRuoli(List.of(userRole));
+        // --- FINE CORREZIONE -
         Utente savedUtente = this.utenteRepository.save(newUtente);
 
         log.info("Il dipendente con id: " + savedUtente.getId() + " è stato salvato correttamente");
@@ -54,7 +68,7 @@ public class UtenteService {
 
     //
     public Utente findById(UUID idUtente) {
-        return this.utenteRepository.findById(idUtente).orElseThrow(() -> new NotFoundException(idUtente));
+        return utenteRepository.findByIdWithRuoli(idUtente).orElseThrow(() -> new NotFoundException(idUtente));
     }
 
     //    public Utente findByAndUpdate(UUID idUtente , UtenteDTO payload){
