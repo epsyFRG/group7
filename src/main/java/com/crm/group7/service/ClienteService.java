@@ -30,6 +30,8 @@ public class ClienteService {
     public Cliente findClienteById(UUID clienteId) {
         return clienteRepository.findById(clienteId).orElseThrow(() -> new NotFoundException(clienteId));
     }
+    //SAVE
+    Cliente saveCliente = this.clienteRepository.save(new Cliente());
 
     // UPDATE
     public Cliente findClienteAndUpdate(UUID clienteId, ClienteDTO payload) {
@@ -75,6 +77,14 @@ public class ClienteService {
     public List<Cliente> findAllSortedByDataUltimoContatto() {
         return clienteRepository.findAll(Sort.by(Sort.Direction.ASC, "dataUltimoContatto"));
     }
+    //Email
+    public List <Cliente> findByEmailUltimoClientel(String email){
+        return  clienteRepository.findByEmailUltimoCliente(email);
+
+       }
+
+
+
 
     private Cliente mapToEntity(ClienteDTO payload) {
         Cliente cliente = new Cliente();
