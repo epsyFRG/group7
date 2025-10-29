@@ -34,7 +34,7 @@ public class RuoloController {
             @RequestParam(defaultValue = "nome") String sortBy) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
         return ruoloService.findAll(pageable).map(ruolo ->
-                new RuoloResponseDTO(ruolo.getId(), ruolo.getNome())
+                new RuoloResponseDTO(ruolo.getId(), ruolo.getRuolo().name())
         );
     }
 
@@ -42,7 +42,7 @@ public class RuoloController {
     @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
     public RuoloResponseDTO findById(@PathVariable UUID id) {
         Ruolo ruolo = ruoloService.findById(id);
-        return new RuoloResponseDTO(ruolo.getId(), ruolo.getNome());
+        return new RuoloResponseDTO(ruolo.getId(), ruolo.getRuolo().name());
     }
 
     @PostMapping
@@ -57,7 +57,7 @@ public class RuoloController {
         }
         Ruolo ruolo = new Ruolo(body.getNome());
         Ruolo savedRuolo = ruoloService.save(ruolo);
-        return new RuoloResponseDTO(savedRuolo.getId(), savedRuolo.getNome());
+        return new RuoloResponseDTO(savedRuolo.getId(), savedRuolo.getRuolo());
     }
 
     @PutMapping("/{id}")

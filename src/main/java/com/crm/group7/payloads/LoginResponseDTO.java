@@ -1,4 +1,4 @@
 package com.crm.group7.payloads;
 
-public class LoginResponseDTO {
+public record LoginResponseDTO(String accessToken) {
 }

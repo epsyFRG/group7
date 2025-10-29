@@ -1,4 +1,4 @@
 package com.crm.group7.payloads;
 
-public class LoginDTO {
+public record LoginDTO (String email, String password) {
 }

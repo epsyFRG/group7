@@ -25,6 +25,8 @@ public class Utente implements UserDetails {
     @Id
     @GeneratedValue
     private UUID id;
+
+    private String username;
     @Column(unique = true, nullable = false)
     private String email;
     @Column(nullable = false)

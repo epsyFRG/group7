@@ -1,10 +1,13 @@
 package com.crm.group7.service;
 
 import com.crm.group7.entities.Utente;
+import com.crm.group7.exceptions.BadRequestException;
 import com.crm.group7.exceptions.NotFoundException;
+import com.crm.group7.payloads.UtenteDTO;
 import com.crm.group7.repositories.UtenteRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -20,8 +23,8 @@ public class UtenteService {
 
     //    @Autowired
 //    private Cloudinary imageUploader;
-//    @Autowired
-//    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 //
 //
 //
@@ -30,27 +33,26 @@ public class UtenteService {
 //        Pageable pageable = PageRequest.of(pageNumber , pageSize , Sort.by(sortBy).ascending());
 //        return this.utenteRepository.findAll(pageable);
 //    }
-//    public Utente save(UtenteDTO payload){
-//        this.utenteRepository.findByEmail(payload.email())
-//                .ifPresent(utente -> {
-//                    throw  new BadRequestException("L'email" + utente.getEmail() + "è in uso!");
-//                }
-//                );
-//        String encodedPassword = passwordEncoder.encode(payload.password());
-//        Utente newUtente= new Utente (payload.nome(), payload.cognome(),  payload.email(), payload.password());
-//        newUtente.setAvatarURL("https://ui-avatars.com/api/?name=" + payload.nome() + "+" + payload.cognome());
-//
-//        Utente saveUtente = this.utenteRepository.save(newUtente);
-//
-//        log.info("L'utente con id :" + saveUtente.getId() + "è stato salvato correttamente!");
-//
-//        return saveUtente;
-//    }
+    public Utente save(UtenteDTO payload){
+        this.utenteRepository.findByEmail(payload.email())
+                .ifPresent(utente -> {
+                    throw  new BadRequestException("L'email" + utente.getEmail() + "è in uso!");
+                }
+                );
+        String encodedPassword = passwordEncoder.encode(payload.password());
+        Utente newUtente= new Utente (payload.nome(), payload.cognome(),  payload.email(), payload.password());
+        newUtente.setAvatarURL("https://ui-avatars.com/api/?name=" + payload.nome() + "+" + payload.cognome());
+
+        Utente saveUtente = this.utenteRepository.save(newUtente);
+
+        log.info("L'utente con id :" + saveUtente.getId() + "è stato salvato correttamente!");
+
+        return saveUtente;
+    }
 //
     public Utente findById(UUID idUtente) {
         return this.utenteRepository.findById(idUtente).orElseThrow(() -> new NotFoundException(idUtente));
     }
-}
 //    public Utente findByAndUpdate(UUID idUtente , UtenteDTO payload){
 //
 //        Utente found= this.findById(idUtente);
@@ -97,11 +99,11 @@ public class UtenteService {
 //            throw new RuntimeException(exception);
 //        }
 //    }
-//        public  Utente findByEmail(String email){
-//            return this.utenteRepository.findByEmail(email).orElseThrow(()->
-//                    new NotFoundException("L'utente con la email'" + email + " non è statp trovato"));
-//
-//        }
-//}
+        public  Utente findByEmail(String email){
+            return this.utenteRepository.findByEmail(email).orElseThrow(()->
+                    new NotFoundException("L'utente con la email'" + email + " non è statp trovato"));
+
+        }
+}
 
 
