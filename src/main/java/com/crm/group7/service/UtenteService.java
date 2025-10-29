@@ -1,37 +1,24 @@
-//package com.crm.group7.service;
-//
-//import com.cloudinary.Cloudinary;
-//import com.cloudinary.utils.ObjectUtils;
-//import com.crm.group7.entities.Utente;
-//import com.crm.group7.exceptions.NotFoundException;
-//import com.crm.group7.payloads.UtenteDTO;
-//import com.crm.group7.repositories.UtenteRepository;
-//import lombok.extern.slf4j.Slf4j;
-//import com.crm.group7.exceptions.BadRequestException;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.data.domain.Page;
-//import org.springframework.data.domain.PageRequest;
-//import org.springframework.data.domain.Pageable;
-//import org.springframework.data.domain.Sort;
-//import org.springframework.security.crypto.password.PasswordEncoder;
-//import org.springframework.stereotype.Service;
-//import org.springframework.web.multipart.MultipartFile;
-//
-//
-//import java.io.IOException;
-//import java.util.List;
-//import java.util.Map;
-//import java.util.UUID;
-//
-//@Service
-//@Slf4j
-//public class UtenteService {
-//    private static final long MAX_SIZE = 5 * 1024 * 1024;
+package com.crm.group7.service;
+
+import com.crm.group7.entities.Utente;
+import com.crm.group7.exceptions.NotFoundException;
+import com.crm.group7.repositories.UtenteRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
+
+@Service
+@Slf4j
+public class UtenteService {
+    //    private static final long MAX_SIZE = 5 * 1024 * 1024;
 //    private static final List<String> ALLOWED_TYPES = List.of("image/png", "image/jpeg");
 //    private static  UUID id;
-//    @Autowired
-//    private UtenteRepository utenteRepository;
-//    @Autowired
+    @Autowired
+    private UtenteRepository utenteRepository;
+
+    //    @Autowired
 //    private Cloudinary imageUploader;
 //    @Autowired
 //    private PasswordEncoder passwordEncoder;
@@ -60,9 +47,10 @@
 //        return saveUtente;
 //    }
 //
-//    public Utente findById(UUID idUtente){
-//        return  this.utenteRepository.findById(idUtente).orElseThrow(()-> new NotFoundException(idUtente));
-//    }
+    public Utente findById(UUID idUtente) {
+        return this.utenteRepository.findById(idUtente).orElseThrow(() -> new NotFoundException(idUtente));
+    }
+}
 //    public Utente findByAndUpdate(UUID idUtente , UtenteDTO payload){
 //
 //        Utente found= this.findById(idUtente);

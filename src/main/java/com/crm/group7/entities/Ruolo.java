@@ -1,5 +1,6 @@
 package com.crm.group7.entities;
 
+import com.crm.group7.entities.enums.Ruoli;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,12 +23,13 @@ public class Ruolo {
     @GeneratedValue
     private UUID id;
     @Column(unique = true, nullable = false)
-    private String nome;
+    @Enumerated(EnumType.STRING)
+    private Ruoli ruolo;
 
     @ManyToMany(mappedBy = "ruoli")
     private List<Utente> utenti = new ArrayList<>();
 
-    public Ruolo(String nome) {
-        this.nome = nome;
+    public Ruolo(Ruoli ruolo) {
+        this.ruolo = ruolo;
     }
 }

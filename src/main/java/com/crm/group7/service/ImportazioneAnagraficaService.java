@@ -44,12 +44,13 @@ public class ImportazioneAnagraficaService {
         return value;
     }
 
-    //    Questo mi serve per standardizzare i nomi con una mappa dichiarata final
+    //    Mappa statica e immutabile per standardizzare e correggere i nomi delle province anomale o doppie.
     private static final Map<String, String> PROVINCE_CORRECTION_MAP;
 
     static {
         Map<String, String> corrections = new HashMap<>();
 
+//        La chiave è il valore sporco/anomalo nel file, il valore è il nome standardizzato.
         corrections.put("BOLZANO/BOZEN", "Bolzano");
         corrections.put("REGGIO NELL'EMILIA", "Reggio-Emilia");
         corrections.put("F. BARLETTA-ANDRIA-TRANI", "Barletta-Andria-Trani");
@@ -67,6 +68,7 @@ public class ImportazioneAnagraficaService {
         PROVINCE_CORRECTION_MAP = Collections.unmodifiableMap(corrections);
     }
 
+    //    Garantisce che l'intera operazione sia atomica (tutto o niente).
     @Transactional
     public void importaDatiGeografici(String provinceFilePath, String comuniFilePath) {
 
@@ -80,6 +82,7 @@ public class ImportazioneAnagraficaService {
         System.out.println("FASE 2 COMPLETATA: Popolamento Anagrafica Geografica completato con successo!");
     }
 
+    //    Legge il file delle province, le persiste e crea la mappa di cache (Nome -> Provincia).
     private Map<String, Provincia> importaProvince(String filePath) {
         Map<String, Provincia> provinceMap = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
@@ -126,7 +129,7 @@ public class ImportazioneAnagraficaService {
                     p = provinciaRepository.save(newProvincia);
                 }
 
-                // 3. Popola la cache
+                // 3. Popola la cache (Nome Provincia -> Entità Provincia)
                 provinceMap.put(p.getNome(), p);
             }
         } catch (Exception e) {
@@ -135,6 +138,7 @@ public class ImportazioneAnagraficaService {
         return provinceMap;
     }
 
+    // Legge il file dei comuni, li associa alla provincia tramite cache e li persiste.
     // ImportaComuni:
     private void importaComuni(String filePath, Map<String, Provincia> provinceCache) {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
@@ -160,16 +164,21 @@ public class ImportazioneAnagraficaService {
 
                 String nomeCacheKey = nomeProvinciaRaw;
 
+                // Pulizia dei valori per errori Excel
+
                 String progressivoPulito = cleanIfExcelError(progressivoComune);
 
                 String nomeComunePulito = cleanIfExcelError(nomeComune);
 
+//                Applicazione della Mappa di Correzione per la chiave di ricerca (lookup)
                 if (PROVINCE_CORRECTION_MAP.containsKey(nomeProvinciaRaw.toUpperCase())) {
                     nomeCacheKey = PROVINCE_CORRECTION_MAP.get(nomeProvinciaRaw.toUpperCase());
                 }
 
+                // Lookup della Provincia nella cache
                 Provincia provincia = provinceCache.get(nomeCacheKey);
 
+//                La provincia deve esistere in cache e il nome del comune deve essere pulito
                 if (provincia != null && nomeComunePulito != null) {
                     Comune c = new Comune();
 
