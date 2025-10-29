@@ -92,8 +92,5 @@ public class ClienteService {
         return cliente;
     }
 
-    public List<Cliente> findByEmailUltimoCliente(String email) {
-        return clienteRepository.findByEmailUltimoCliente(email);
 
-    }
 }

@@ -18,5 +18,5 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID> {
 
     List<Cliente> findAllByDataUltimoContattoBefore(LocalDate dataUltimoContatto);
 
-    List<Cliente> findByEmailUltimoCliente(String Email);
+
 }

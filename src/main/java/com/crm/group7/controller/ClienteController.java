@@ -24,18 +24,15 @@ public class ClienteController {
             @RequestParam(required = false) String email) {
         //in caso filtra per ID
         if (id != null) {
-            Cliente cliente = clienteService.findClienteById(id);
+            Cliente cliente = clienteService.findClienteById();
             return cliente != null ? Collections.singletonList(cliente) : Collections.emptyList();
         }
         //in caso filtra per Nome
         else if (nome != null && !nome.isEmpty()) {
             return clienteService.findAllSortedByNome();
         }
-        //In caso  filtra Email
-        else if (email != null && !email.isEmpty()) {
-            Cliente cliente = (Cliente) clienteService.findByEmailUltimoCliente(email);
-            return cliente != null ? Collections.singletonList(cliente) : Collections.emptyList();
-        }
+
+
         //In caso di Default restituisce tutti
         else {
             return clienteService.findAllSortedByNome();
