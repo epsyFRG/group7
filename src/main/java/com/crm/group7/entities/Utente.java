@@ -1,5 +1,6 @@
 package com.crm.group7.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,17 +22,16 @@ import java.util.stream.Collectors;
 @Setter
 @ToString
 @NoArgsConstructor
+@JsonIgnoreProperties({"password", "authorities", "enabled", "accountNonLocked", "accountNonExpired", "credentialsNonExpired"})
 public class Utente implements UserDetails {
     @Id
     @GeneratedValue
     private UUID id;
-
     private String username;
     @Column(unique = true, nullable = false)
     private String email;
     @Column(nullable = false)
     private String password;
-
     private String nome;
     private String cognome;
     private String avatarURL;
@@ -44,7 +44,8 @@ public class Utente implements UserDetails {
     )
     private List<Ruolo> ruoli = new ArrayList<>();
 
-    public Utente(String email, String password, String nome, String cognome) {
+    public Utente(String username, String email, String password, String nome, String cognome) {
+        this.username = username;
         this.email = email;
         this.password = password;
         this.nome = nome;
@@ -63,7 +64,7 @@ public class Utente implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.email;
+        return this.username;
     }
 }
 
