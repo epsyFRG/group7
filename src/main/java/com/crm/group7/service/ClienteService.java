@@ -91,4 +91,9 @@ public class ClienteService {
         cliente.setLogoAziendale(payload.logoAziendale());
         return cliente;
     }
+
+    public List<Cliente> findByEmailUltimoCliente(String email) {
+        return clienteRepository.findByEmailUltimoCliente(email);
+
+    }
 }
