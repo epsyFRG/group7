@@ -24,36 +24,40 @@ public class UtenteService {
     //    @Autowired
 //    private Cloudinary imageUploader;
     @Autowired
-    private PasswordEncoder passwordEncoder;
-//
-//
+    private PasswordEncoder bcrypt;
+
+    //
 //
 //    public Page<Utente> findAll(int pageNumber, int pageSize, String sortBy){
 //        if (pageSize > 50) pageSize=50;
 //        Pageable pageable = PageRequest.of(pageNumber , pageSize , Sort.by(sortBy).ascending());
 //        return this.utenteRepository.findAll(pageable);
 //    }
-    public Utente save(UtenteDTO payload){
-        this.utenteRepository.findByEmail(payload.email())
-                .ifPresent(utente -> {
-                    throw  new BadRequestException("L'email" + utente.getEmail() + "è in uso!");
+    public Utente save(UtenteDTO payload) {
+        this.utenteRepository.findByUsername(payload.username()).ifPresent(utente -> {
+                    throw new BadRequestException("L'username " + utente.getUsername() + " è già in uso!");
                 }
-                );
-        String encodedPassword = passwordEncoder.encode(payload.password());
-        Utente newUtente= new Utente (payload.nome(), payload.cognome(),  payload.email(), payload.password());
-        newUtente.setAvatarURL("https://ui-avatars.com/api/?name=" + payload.nome() + "+" + payload.cognome());
+        );
 
-        Utente saveUtente = this.utenteRepository.save(newUtente);
+        this.utenteRepository.findByEmail(payload.email()).ifPresent(utente -> {
+            throw new BadRequestException("L'email " + utente.getEmail() + " è già registrata!");
+        });
 
-        log.info("L'utente con id :" + saveUtente.getId() + "è stato salvato correttamente!");
+        Utente newUtente = new Utente(payload.username(), payload.email(), bcrypt.encode(payload.password()), payload.nome(), payload.cognome());
+        newUtente.setAvatarURL("https://ui-avatars.com/api/?name=" + payload.nome());
 
-        return saveUtente;
+        Utente savedUtente = this.utenteRepository.save(newUtente);
+
+        log.info("Il dipendente con id: " + savedUtente.getId() + " è stato salvato correttamente");
+        return savedUtente;
     }
-//
+
+    //
     public Utente findById(UUID idUtente) {
         return this.utenteRepository.findById(idUtente).orElseThrow(() -> new NotFoundException(idUtente));
     }
-//    public Utente findByAndUpdate(UUID idUtente , UtenteDTO payload){
+
+    //    public Utente findByAndUpdate(UUID idUtente , UtenteDTO payload){
 //
 //        Utente found= this.findById(idUtente);
 //
@@ -99,11 +103,11 @@ public class UtenteService {
 //            throw new RuntimeException(exception);
 //        }
 //    }
-        public  Utente findByEmail(String email){
-            return this.utenteRepository.findByEmail(email).orElseThrow(()->
-                    new NotFoundException("L'utente con la email'" + email + " non è statp trovato"));
+    public Utente findByEmail(String email) {
+        return this.utenteRepository.findByEmail(email).orElseThrow(() ->
+                new NotFoundException("L'utente con la email'" + email + " non è statp trovato"));
 
-        }
+    }
 }
 
 

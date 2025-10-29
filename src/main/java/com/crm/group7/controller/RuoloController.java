@@ -1,6 +1,7 @@
 package com.crm.group7.controller;
 
 import com.crm.group7.entities.Ruolo;
+import com.crm.group7.entities.enums.Ruoli;
 import com.crm.group7.exceptions.BadRequestException;
 import com.crm.group7.payloads.NewRuoloDTO;
 import com.crm.group7.payloads.RuoloResponseDTO;
@@ -31,7 +32,7 @@ public class RuoloController {
     public Page<RuoloResponseDTO> findAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nome") String sortBy) {
+            @RequestParam(defaultValue = "ruolo") String sortBy) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
         return ruoloService.findAll(pageable).map(ruolo ->
                 new RuoloResponseDTO(ruolo.getId(), ruolo.getRuolo().name())
@@ -55,9 +56,18 @@ public class RuoloController {
                     .collect(Collectors.joining(", "));
             throw new BadRequestException("Errori nel payload: " + messages);
         }
-        Ruolo ruolo = new Ruolo(body.getNome());
+
+        // Converti la stringa dal DTO in un Enum
+        Ruoli ruoloEnum;
+        try {
+            ruoloEnum = Ruoli.valueOf(body.getNome().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Il ruolo '" + body.getNome() + "' non è valido.");
+        }
+
+        Ruolo ruolo = new Ruolo(ruoloEnum);
         Ruolo savedRuolo = ruoloService.save(ruolo);
-        return new RuoloResponseDTO(savedRuolo.getId(), savedRuolo.getRuolo());
+        return new RuoloResponseDTO(savedRuolo.getId(), savedRuolo.getRuolo().name()); // CORRETTO
     }
 
     @PutMapping("/{id}")
@@ -69,9 +79,18 @@ public class RuoloController {
                     .collect(Collectors.joining(", "));
             throw new BadRequestException("Errori nel payload: " + messages);
         }
-        Ruolo ruoloAggiornato = new Ruolo(body.getNome());
+
+        // Converti la stringa dal DTO in un Enum
+        Ruoli ruoloEnum;
+        try {
+            ruoloEnum = Ruoli.valueOf(body.getNome().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Il ruolo '" + body.getNome() + "' non è valido.");
+        }
+
+        Ruolo ruoloAggiornato = new Ruolo(ruoloEnum);
         Ruolo updatedRuolo = ruoloService.update(id, ruoloAggiornato);
-        return new RuoloResponseDTO(updatedRuolo.getId(), updatedRuolo.getNome());
+        return new RuoloResponseDTO(updatedRuolo.getId(), updatedRuolo.getRuolo().name()); // CORRETTO
     }
 
     @DeleteMapping("/{id}")
