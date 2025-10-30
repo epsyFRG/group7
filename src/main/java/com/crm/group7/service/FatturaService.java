@@ -8,6 +8,7 @@ import com.crm.group7.exceptions.NotFoundException;
 import com.crm.group7.payloads.FatturaRequestDTO;
 import com.crm.group7.payloads.FatturaResponseDTO;
 import com.crm.group7.repositories.FatturaRepository;
+import jakarta.persistence.criteria.Expression;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -27,7 +28,7 @@ public class FatturaService {
     @Autowired
     private StatoFatturaService statoFatturaService;
     @Autowired
-    private ClienteService clienteService; // NECESSARIO per la mappatura DTO
+    private ClienteService clienteService;
 
     public FatturaResponseDTO save(FatturaRequestDTO dto) {
 
@@ -60,7 +61,6 @@ public class FatturaService {
     public FatturaResponseDTO update(UUID idFattura, Fattura fatturaAggiornata) {
         Fattura fatturaEsistente = this.findFatturaEntityById(idFattura);
 
-        // La logica di validazione rimane
         if (!fatturaEsistente.getNumero().equals(fatturaAggiornata.getNumero()) &&
                 fatturaRepository.existsByNumero(fatturaAggiornata.getNumero())) {
             throw new BadRequestException("Esiste già una fattura con numero: " + fatturaAggiornata.getNumero());
@@ -102,7 +102,8 @@ public class FatturaService {
     public Page<FatturaResponseDTO> findByFiltri(UUID idCliente, UUID idStato, LocalDate data, Integer anno,
                                                  Double minImporto, Double maxImporto, Pageable pageable) {
 
-        Specification<Fattura> spec = Specification.allOf();
+        // Inizializza una Specification "vuota" che non filtra nulla
+        Specification<Fattura> spec = Specification.where(null);
 
         if (idCliente != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("cliente").get("idCliente"), idCliente));
@@ -113,9 +114,20 @@ public class FatturaService {
         if (data != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("data"), data));
         }
+
         if (anno != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(cb.function("YEAR", Integer.class, root.get("data")), anno));
+            spec = spec.and((root, query, cb) -> {
+
+                Expression<Integer> yearExpression = cb.function(
+                        "date_part",
+                        Integer.class,
+                        cb.literal("year"),
+                        root.get("data")
+                );
+                return cb.equal(yearExpression, anno);
+            });
         }
+
         if (minImporto != null) {
             spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("importo"), minImporto));
         }
@@ -126,9 +138,9 @@ public class FatturaService {
         Page<Fattura> risultatoEntita = fatturaRepository.findAll(spec, pageable);
         log.info("Trovate {} fatture con i filtri", risultatoEntita.getTotalElements());
 
+        // Mappa i risultati della pagina in DTO
         return risultatoEntita.map(this::mapToResponseDTO);
     }
-
 
     private Fattura findFatturaEntityById(UUID idFattura) {
         return fatturaRepository.findById(idFattura)
@@ -142,12 +154,15 @@ public class FatturaService {
                 .data(fattura.getData())
                 .importoTotale(fattura.getImporto())
 
+                // Dettagli Cliente
                 .idCliente(fattura.getCliente().getIdCliente())
-                .nomeCliente(fattura.getCliente().getRagioneSociale().name()) // Chiamo .name() perché è un Enum
+                .nomeCliente(fattura.getCliente().getRagioneSociale().name())
 
+                // Dettagli Stato
                 .idStato(fattura.getStato().getIdStato())
                 .statoDescrizione(fattura.getStato().getStato())
 
                 .build();
     }
 }
+
