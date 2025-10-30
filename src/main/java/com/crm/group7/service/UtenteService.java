@@ -52,16 +52,14 @@ public class UtenteService {
 
         Utente newUtente = new Utente(payload.username(), payload.email(), bcrypt.encode(payload.password()), payload.nome(), payload.cognome());
         newUtente.setAvatarURL("https://ui-avatars.com/api/?name=" + payload.nome());
-        
+
         // 1. Inizializza la lista dei ruoli dell'utente
         List<Ruolo> ruoliDaAssegnare = payload.ruoli().stream()
                 // 2. Per ogni stringa di ruolo ("ADMIN", "UTENTE"), cercala nel DB
                 .map(ruolo -> ruoloRepository.findByRuolo(ruolo)
-                        // 3. Se il ruolo non esiste (errore nel RuoloRunner/DB), lancia un'eccezione
                         .orElseThrow(() -> new RuntimeException("Ruolo '" + ruolo + "' non trovato nel database!")))
                 .toList();
 
-        // 4. Se il payload non ha specificato ruoli (molto improbabile con @Validated), assegna UTENTE come fallback.
         if (ruoliDaAssegnare.isEmpty()) {
             Ruolo userRole = ruoloRepository.findByRuolo(Ruoli.UTENTE)
                     .orElseThrow(() -> new RuntimeException("Ruolo UTENTE non trovato!"));
