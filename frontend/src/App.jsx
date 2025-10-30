@@ -1,12 +1,21 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
+import React from "react"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import "./App.css"
+import Header from "./component/Header"
+import LoginPage from "./pages/LoginPage"
+import RegisterPage from "./pages/RegisterPage"
 
-function App() {
-  const [count, setCount] = useState(0);
-
-  return <></>;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Header />
+      <main className="container mt-4">
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Routes>
+      </main>
+    </BrowserRouter>
+  )
 }
-
-export default App;
