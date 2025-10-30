@@ -5,6 +5,7 @@ import com.cloudinary.utils.ObjectUtils;
 import com.crm.group7.entities.Cliente;
 import com.crm.group7.entities.Comune;
 import com.crm.group7.entities.Indirizzo;
+import com.crm.group7.exceptions.BadRequestException;
 import com.crm.group7.exceptions.NotFoundException;
 import com.crm.group7.payloads.ClienteDTO;
 import com.crm.group7.repositories.ClienteRepository;
@@ -43,6 +44,17 @@ public class ClienteService {
 
     @Transactional
     public Cliente saveCliente(ClienteDTO dto) {
+
+        if (clienteRepository.existsByPartitaIva(dto.partitaIva())) {
+            throw new BadRequestException("Esiste già un cliente con questa Partita IVA: " + dto.partitaIva());
+        }
+        if (clienteRepository.existsByPec(dto.pec())) {
+            throw new BadRequestException("Questa PEC è già registrata: " + dto.pec());
+        }
+        if (clienteRepository.existsByEmailContatto(dto.emailContatto())) {
+            throw new BadRequestException("Questa Email Contatto è già registrata: " + dto.emailContatto());
+        }
+
         Cliente cliente = mapToEntity(dto);
         Cliente savedCliente = clienteRepository.save(cliente);
 
@@ -79,6 +91,16 @@ public class ClienteService {
     public Cliente findClienteAndUpdate(UUID clienteId, ClienteDTO payload) {
         Cliente found = findClienteById(clienteId);
 
+        if (clienteRepository.existsByPartitaIvaAndIdClienteNot(payload.partitaIva(), clienteId)) {
+            throw new BadRequestException("Esiste già un ALTRO cliente con questa Partita IVA: " + payload.partitaIva());
+        }
+        if (clienteRepository.existsByPecAndIdClienteNot(payload.pec(), clienteId)) {
+            throw new BadRequestException("Esiste già un ALTRO cliente con questa PEC: " + payload.pec());
+        }
+        if (clienteRepository.existsByEmailContattoAndIdClienteNot(payload.emailContatto(), clienteId)) {
+            throw new BadRequestException("Esiste già un ALTRO cliente con questa Email Contatto: " + payload.emailContatto());
+        }
+
         found.setRagioneSociale(payload.ragioneSociale());
         found.setPartitaIva(payload.partitaIva());
         found.setDataInserimento(payload.dataInserimento());
@@ -91,8 +113,15 @@ public class ClienteService {
         found.setTelefonoContatto(payload.telefonoContatto());
         // Il logoAziendale viene aggiornato solo tramite l'endpoint /logo
 
-        if (payload.indirizzi() != null) {
-            indirizzoRepository.deleteByCliente(found);
+        // 1. Pulisci la collezione GESTITA
+        found.getIndirizzi().clear();
+
+        // 2. FORZA IL FLUSH SUL DATABASE
+        // Questo esegue immediatamente le DELETE causate da orphanRemoval
+        clienteRepository.saveAndFlush(found);
+
+        // 3. Ora che il database è pulito, aggiungi i nuovi indirizzi
+        if (payload.indirizzi() != null && !payload.indirizzi().isEmpty()) {
 
             List<Indirizzo> nuoviIndirizzi = payload.indirizzi().stream()
                     .map(indirizzoDTO -> {
@@ -104,18 +133,15 @@ public class ClienteService {
                         indirizzo.setCivico(indirizzoDTO.civico());
                         indirizzo.setLocalita(indirizzoDTO.localita());
                         indirizzo.setCap(indirizzoDTO.cap());
-                        indirizzo.setTipoIndirizzo(indirizzoDTO.tipoIndirizzo()); // Corretto
+                        indirizzo.setTipoIndirizzo(indirizzoDTO.tipoIndirizzo());
                         indirizzo.setComune(comune);
                         indirizzo.setCliente(found);
                         return indirizzo;
                     })
                     .collect(Collectors.toList());
 
-            if (!nuoviIndirizzi.isEmpty()) {
-                indirizzoRepository.saveAll(nuoviIndirizzi);
-            }
-
-            found.setIndirizzi(nuoviIndirizzi);
+            // 4. Aggiungi i nuovi alla collezione.
+            found.getIndirizzi().addAll(nuoviIndirizzi);
         }
 
         return clienteRepository.save(found);
@@ -123,6 +149,9 @@ public class ClienteService {
 
     public void findClienteAndDelete(UUID clienteId) {
         Cliente found = findClienteById(clienteId);
+
+        indirizzoRepository.deleteByCliente(found);
+
         clienteRepository.delete(found);
     }
 
@@ -186,4 +215,3 @@ public class ClienteService {
         return cliente;
     }
 }
-

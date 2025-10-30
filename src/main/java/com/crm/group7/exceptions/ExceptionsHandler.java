@@ -4,11 +4,14 @@ import com.crm.group7.payloads.ErrorWithListDTO;
 import com.crm.group7.payloads.ErrorsDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class ExceptionsHandler {
@@ -17,6 +20,16 @@ public class ExceptionsHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorWithListDTO handleValidationErrors(ValidationException ex) {
         return new ErrorWithListDTO(ex.getMessage(), LocalDateTime.now(), ex.getErrorsMessages());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorWithListDTO handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+        List<String> errorsMessages = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.toList());
+
+        return new ErrorWithListDTO("Errore di validazione nel payload", LocalDateTime.now(), errorsMessages);
     }
 
     @ExceptionHandler(BadRequestException.class)

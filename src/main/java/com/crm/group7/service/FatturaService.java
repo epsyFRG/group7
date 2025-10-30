@@ -61,6 +61,7 @@ public class FatturaService {
     public FatturaResponseDTO update(UUID idFattura, Fattura fatturaAggiornata) {
         Fattura fatturaEsistente = this.findFatturaEntityById(idFattura);
 
+        // La logica di validazione rimane
         if (!fatturaEsistente.getNumero().equals(fatturaAggiornata.getNumero()) &&
                 fatturaRepository.existsByNumero(fatturaAggiornata.getNumero())) {
             throw new BadRequestException("Esiste già una fattura con numero: " + fatturaAggiornata.getNumero());
@@ -117,12 +118,12 @@ public class FatturaService {
 
         if (anno != null) {
             spec = spec.and((root, query, cb) -> {
-
+                // Usiamo la funzione "date_part" specifica di PostgreSQL
                 Expression<Integer> yearExpression = cb.function(
                         "date_part",
                         Integer.class,
-                        cb.literal("year"),
-                        root.get("data")
+                        cb.literal("year"), // Argomento 1: l'unità di tempo
+                        root.get("data")     // Argomento 2: la colonna
                 );
                 return cb.equal(yearExpression, anno);
             });
@@ -142,12 +143,27 @@ public class FatturaService {
         return risultatoEntita.map(this::mapToResponseDTO);
     }
 
+
     private Fattura findFatturaEntityById(UUID idFattura) {
         return fatturaRepository.findById(idFattura)
                 .orElseThrow(() -> new NotFoundException("La fattura con l'id " + idFattura + " non è stata trovata"));
     }
 
+
     private FatturaResponseDTO mapToResponseDTO(Fattura fattura) {
+
+        Cliente cliente = fattura.getCliente();
+        UUID idCliente = null;
+        String nomeCliente = null; // Valore di default
+
+        if (cliente != null) {
+            idCliente = cliente.getIdCliente();
+            // Controlliamo che ragioneSociale non sia null prima di chiamare .name()
+            if (cliente.getRagioneSociale() != null) {
+                nomeCliente = cliente.getRagioneSociale().name();
+            }
+        }
+
         return FatturaResponseDTO.builder()
                 .idFattura(fattura.getIdFattura())
                 .numero(String.valueOf(fattura.getNumero()))
@@ -155,12 +171,10 @@ public class FatturaService {
                 .importoTotale(fattura.getImporto())
 
                 // Dettagli Cliente
-                .idCliente(fattura.getCliente().getIdCliente())
-                .nomeCliente(fattura.getCliente().getRagioneSociale().name())
+                .idCliente(idCliente)
 
                 // Dettagli Stato
                 .idStato(fattura.getStato().getIdStato())
-                .statoDescrizione(fattura.getStato().getStato())
 
                 .build();
     }
