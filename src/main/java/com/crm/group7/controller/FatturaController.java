@@ -1,72 +1,96 @@
 package com.crm.group7.controller;
 
 import com.crm.group7.entities.Fattura;
+import com.crm.group7.payloads.FatturaRequestDTO;
+import com.crm.group7.payloads.FatturaResponseDTO;
 import com.crm.group7.service.FatturaService;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-
+import java.time.LocalDate;
 import java.util.UUID;
+
 @Slf4j
 @RestController
-@RequestMapping("/fattura")
+@RequestMapping("/fatture")
 public class FatturaController {
 
     @Autowired
     private FatturaService fatturaService;
 
+    // 1. LETTURA CON FILTRI e PAGINAZIONE (Ritorna Page di DTO)
     @GetMapping
-    public Object filtroFattura(
-            @RequestParam(required = false) UUID id,
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'UTENTE')")
+    public Page<FatturaResponseDTO> getFattureConFiltri(
             @RequestParam(required = false) UUID idCliente,
-            @RequestParam(required = false) Integer anno,
             @RequestParam(required = false) UUID idStato,
+            @RequestParam(required = false) Integer anno,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data,
+            @RequestParam(required = false) Double minImporto,
+            @RequestParam(required = false) Double maxImporto,
             Pageable pageable
     ) {
-
-        if (id != null) {
-            Fattura fattura = fatturaService.findById(id);
-            return fattura != null ? Collections.singletonList(fattura) : Collections.emptyList();
-        } else if (idCliente != null) {
-            return fatturaService.findByCliente(idCliente, pageable);
-        } else if (idStato != null) {
-            return fatturaService.findByStato(idStato, pageable);
-        } else if (anno != null) {
-            return fatturaService.findByAnno(anno, pageable);
-        } else {
-            return fatturaService.findAll(pageable);
-        }
+        return fatturaService.findByFiltri(
+                idCliente,
+                idStato,
+                data,
+                anno,
+                minImporto,
+                maxImporto,
+                pageable
+        );
     }
+
+    // 2. LETTURA SINGOLA PER ID (Ritorna DTO)
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'UTENTE')")
+    public FatturaResponseDTO getFatturaById(@PathVariable UUID id) {
+        return fatturaService.findById(id);
+    }
+
+    // 3. CREAZIONE (Solo ADMIN - Usa Request DTO e @Valid)
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Fattura creaFattura(@RequestBody Fattura nuovaFattura){
-        log.info("Creazione nuova fattura per cliente",nuovaFattura.getCliente());
-        return fatturaService.save(nuovaFattura);
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public FatturaResponseDTO creaFattura(@RequestBody @Valid FatturaRequestDTO nuovaFatturaDTO) {
+        log.info("Creazione nuova fattura per cliente {}", nuovaFatturaDTO.getIdCliente());
+        return fatturaService.save(nuovaFatturaDTO);
     }
+
+    // 4. AGGIORNAMENTO
     @PutMapping("/{id}")
-      public Fattura aggiornaFattura(
-              @PathVariable UUID id,
-              @RequestBody Fattura fatturaAggiornata
-    ){
-        log.info("Aggiornamento fattura ocn ID",id);
-        return  fatturaService.update(id,fatturaAggiornata);
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public FatturaResponseDTO aggiornaFattura(
+            @PathVariable UUID id,
+            @RequestBody Fattura fatturaAggiornata
+    ) {
+        log.info("Aggiornamento fattura con ID {}", id);
+        return fatturaService.update(id, fatturaAggiornata);
     }
+
+    // 5. CANCELLAZIONE (Solo ADMIN)
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void elimanFattura(@PathVariable UUID id){
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public void eliminaFattura(@PathVariable UUID id) {
         log.info("Richiesta eliminazione fattura con ID {}", id);
         fatturaService.delete(id);
     }
-    @PutMapping("/{idFattura}/{stato}/{idNuovoStato}")
-    public Fattura cambiaStato(
-            @PathVariable UUID idFattura,
-            @PathVariable UUID idNuovoStato
-    ){
-return  fatturaService.cambiaStato(idFattura,idNuovoStato);
+
+    // 6. CAMBIA STATO (PATCH - Ritorna DTO)
+    @PatchMapping("/{idFattura}/stato/{idNuovoStato}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public FatturaResponseDTO cambiaStato( // TIPO DI RITORNO MODIFICATO
+                                           @PathVariable UUID idFattura,
+                                           @PathVariable UUID idNuovoStato
+    ) {
+        return fatturaService.cambiaStato(idFattura, idNuovoStato);
     }
 }

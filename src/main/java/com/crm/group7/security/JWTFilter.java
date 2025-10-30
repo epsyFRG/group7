@@ -1,9 +1,9 @@
 package com.crm.group7.security;
 
-
 import com.crm.group7.entities.Utente;
 import com.crm.group7.exceptions.UnauthorizedException;
 import com.crm.group7.service.UtenteService;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,18 +11,20 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class JWTFilter extends OncePerRequestFilter {
-    // Estendendo OncePerRequestFilter sto dicendo che questa classe sarà compatibile con la FilterChain
-    // Una caratteristica importante dei filtri è che hanno accesso alle richieste che arrivano e inoltre possono anche mandare delle risposte
     @Autowired
     private JWTTools jwtTools;
 
@@ -31,51 +33,53 @@ public class JWTFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        // Questo metodo verrà eseguito ad ogni richiesta. Sarà lui a dover verificare il token
 
-//        -------------------------AUTENTICAZIONE-----------------------------
-        // PIANO DI BATTAGLIA
-        // 1. Verifichiamo se nella request esiste un header che si chiama Authorization, verifichiamo anche che sia fatto con il formato giusto
-        // (Authorization: "Bearer 123j21389912391283..."). Se non c'è oppure se è nel formato sbagliato --> 401
         String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer "))
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new UnauthorizedException("Inserire il token nell'authorization header nel formato giusto!");
+        }
 
-        // 2. Se l'header esiste, estraiamo il token da esso
-        // "Bearer 123j21389912391283..."
         String accessToken = authHeader.replace("Bearer ", "");
 
-        // 3. Verifichiamo se il token è valido, cioè controlleremo se è stato modificato oppure no, se non è scaduto e se non è malformato
+        // 3. Verifichiamo se il token è valido. Se non è valido, lanciamo subito una 401
         jwtTools.verifyToken(accessToken);
 
-        // 1. Cerchiamo l'utente nel db (l'id sta nel token!)
-        // 1.1 Estraiamo l'id dal token
-        UUID dipendenteId = jwtTools.extractIdFromToken(accessToken);
-        // 1.2 findById
-        Utente found = utenteService.findById(dipendenteId);
+        // ----------------------------------------------------------------------
+        // 🚨 CORREZIONE CRUCIALE: ESTRAZIONE DEI RUOLI DAL TOKEN 🚨
+        // ----------------------------------------------------------------------
 
-        // 2. Associamo l'utente al Security Context
-        // Questo fondamentale step, serve per associare l'utente che sta effettuando la richiesta alla richiesta stessa per tutto il corso
-        // della sua durata, quindi fino a che la richiesta non otterrà una risposta. Questo significa che sia in filtri successivi, che nel
-        // controller, che negli endpoint potrò sempre risalire a chi sia l'utente che ha fatto la richiesta
-        // Questo ci servirà sia per controllare il ruolo dell'utente prima di arrivare agli endpoint, sia per effettuare dei controlli all'interno
-        // degli endpoint stessi per capire se chi sta cercando di leggere/modificare/cancellare una risorsa sia effettivamente il proprietario di
-        // tale risorsa
-        Authentication authentication = new UsernamePasswordAuthenticationToken(found, null, found.getAuthorities());
+        // 1. Estraiamo TUTTI i claims dal token
+        Claims claims = jwtTools.extractAllClaims(accessToken);
+
+        // 2. Estraiamo l'ID utente dal token (dal claim "sub")
+        UUID utenteId = UUID.fromString(claims.getSubject());
+
+        // 3. Cerchiamo l'utente nel db (OPZIONALE ma lo teniamo per avere l'oggetto completo)
+        Utente found = utenteService.findById(utenteId);
+
+        // 4. Estraiamo la stringa dei ruoli dal claim "roles" che abbiamo aggiunto
+        String rolesString = claims.get("roles", String.class);
+        List<SimpleGrantedAuthority> authorities = null;
+
+        if (rolesString != null) {
+            // Es. "ADMIN,UTENTE" -> [SimpleGrantedAuthority("ADMIN"), SimpleGrantedAuthority("UTENTE")]
+            authorities = Arrays.stream(rolesString.split(","))
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList());
+        }
+
+        // 5. Associamo l'utente e le autorità ESTRATTE DAL TOKEN al Security Context
+        // Usiamo le authorities estratte dal token (authorities), che ora contengono "ADMIN"
+        Authentication authentication = new UsernamePasswordAuthenticationToken(found, null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        // Aggiorniamo il Security Context associando ad esso l'utente corrente ed i suoi ruoli
 
-        // 3. Se tutto è OK passiamo la richiesta al prossimo (che può essere o un altro filtro o direttamente il controller)
-        filterChain.doFilter(request, response); // .doFilter chiama il prossimo elemento della catena (o un altro filtro o il controller direttamente)
+        // 6. Passiamo la richiesta al prossimo
+        filterChain.doFilter(request, response);
     }
-
-    // Tramite l'override di questo metodo posso disabilitare il lavoro del filtro per determinati tipi di richieste
-    // Ad esempio, posso disabilitare tutte le richieste dirette al controller /auth
-    // Quindi tutte le richieste tipo /auth/login oppure /auth/register non richiederanno alcun token
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        // Ignora /auth/login e /auth/register
         return new AntPathMatcher().match("/auth/**", request.getServletPath());
-        // Tutti gli endpoint nel controller "/auth/" non verranno controllati dal filtro
     }
 }

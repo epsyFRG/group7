@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @Table(name = "Utente")
 @Getter
 @Setter
-@ToString
+@ToString(exclude = {"ruoli"})
 @NoArgsConstructor
 @JsonIgnoreProperties({"password", "authorities", "enabled", "accountNonLocked", "accountNonExpired", "credentialsNonExpired"})
 public class Utente implements UserDetails {

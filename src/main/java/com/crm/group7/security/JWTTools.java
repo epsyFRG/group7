@@ -2,13 +2,16 @@ package com.crm.group7.security;
 
 import com.crm.group7.entities.Utente;
 import com.crm.group7.exceptions.UnauthorizedException;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class JWTTools {
@@ -16,16 +19,20 @@ public class JWTTools {
     private String secret;
 
     public String createToken(Utente utente) {
-        // Jwts (proveniente da jjwt-api) ha principalmente 2 metodi: builder() e parser() che useremo rispettivamente per creare il token
-        // e per verificare il token
+
+        String ruoliString = utente.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
 
         return Jwts.builder()
-                .issuedAt(new Date(System.currentTimeMillis())) // Data di emissione del token (IAT - Issued At), va messa in millisecondi
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7)) // Data di scadenza del token (Expiration Date), anch'essa in millisecondi
-                .subject(String.valueOf(utente.getId())) // Subject, ovvero a chi appartiene il token <-- MAI METTERE DATI RISERVATI/SENSIBILI NEL PAYLOAD
-                .signWith(Keys.hmacShaKeyFor(secret.getBytes())) // Firmo il token con un algoritmo specifico HMAC fornendogli un SECRET che solo il server conosce (serve per generare token e verificare token)
-                .compact(); // Assemblo il tutto ottenendo una stringa finale che sarà il mio token
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7))
+                .subject(String.valueOf(utente.getId()))
 
+                .claim("roles", ruoliString)
+
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes()))
+                .compact();
     }
 
     public void verifyToken(String accessToken) {
@@ -45,5 +52,17 @@ public class JWTTools {
                 .parseSignedClaims(accessToken)
                 .getPayload()
                 .getSubject());
+    }
+
+    public Claims extractAllClaims(String accessToken) {
+        try {
+            return Jwts.parser().verifyWith(Keys.hmacShaKeyFor(secret.getBytes()))
+                    .build()
+                    .parseSignedClaims(accessToken)
+                    .getPayload();
+        } catch (Exception ex) {
+            // Se il token è invalido o scaduto, questa eccezione verrà lanciata
+            throw new UnauthorizedException("Problema con l'estrazione dei claims dal token: " + ex.getMessage());
+        }
     }
 }

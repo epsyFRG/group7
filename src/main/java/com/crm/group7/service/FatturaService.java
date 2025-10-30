@@ -1,9 +1,12 @@
 package com.crm.group7.service;
 
+import com.crm.group7.entities.Cliente;
 import com.crm.group7.entities.Fattura;
 import com.crm.group7.entities.StatoFattura;
 import com.crm.group7.exceptions.BadRequestException;
 import com.crm.group7.exceptions.NotFoundException;
+import com.crm.group7.payloads.FatturaRequestDTO;
+import com.crm.group7.payloads.FatturaResponseDTO;
 import com.crm.group7.repositories.FatturaRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,37 +24,43 @@ public class FatturaService {
 
     @Autowired
     private FatturaRepository fatturaRepository;
-
     @Autowired
     private StatoFatturaService statoFatturaService;
+    @Autowired
+    private ClienteService clienteService; // NECESSARIO per la mappatura DTO
 
-    public Fattura save(Fattura fattura) {
-        if (fatturaRepository.existsByNumero(fattura.getNumero())) {
-            throw new BadRequestException("Esiste già una fattura con questo numero: " + fattura.getNumero());
+    public FatturaResponseDTO save(FatturaRequestDTO dto) {
+
+        if (fatturaRepository.existsByNumero(dto.getNumero())) {
+            throw new BadRequestException("Esiste già una fattura con questo numero: " + dto.getNumero());
         }
-        if (fattura.getImporto() <= 0) {
-            throw new BadRequestException("L'importo della fattura deve essere maggiore di zero");
-        }
 
-        Fattura savedFattura = fatturaRepository.save(fattura);
-        log.info("La fattura numero {} è stata creata con successo per il cliente {} / Importo: €{}",
-                savedFattura.getNumero(),
-                savedFattura.getCliente().getIdCliente(),
-                savedFattura.getImporto());
-        return savedFattura;
+        Cliente cliente = clienteService.findClienteById(dto.getIdCliente());
+        StatoFattura stato = statoFatturaService.findById(dto.getIdStato());
+
+        // Mappatura DTO -> Entità
+        Fattura nuovaFattura = new Fattura();
+        nuovaFattura.setNumero(dto.getNumero());
+        nuovaFattura.setImporto(dto.getImportoTotale());
+        nuovaFattura.setData(dto.getData());
+        nuovaFattura.setCliente(cliente);
+        nuovaFattura.setStato(stato);
+
+        Fattura savedFattura = fatturaRepository.save(nuovaFattura);
+        log.info("La fattura numero {} è stata creata con successo.", savedFattura.getNumero());
+
+        return mapToResponseDTO(savedFattura);
     }
 
-    public Page<Fattura> findAll(Pageable pageable) {
-        return fatturaRepository.findAll(pageable);
+    public FatturaResponseDTO findById(UUID idFattura) {
+        Fattura fattura = this.findFatturaEntityById(idFattura);
+        return mapToResponseDTO(fattura);
     }
 
-    public Fattura findById(UUID idFattura) {
-        return fatturaRepository.findById(idFattura)
-                .orElseThrow(() -> new NotFoundException("La fattura con l'id " + idFattura + " non è stata trovata"));
-    }
+    public FatturaResponseDTO update(UUID idFattura, Fattura fatturaAggiornata) {
+        Fattura fatturaEsistente = this.findFatturaEntityById(idFattura);
 
-    public Fattura update(UUID idFattura, Fattura fatturaAggiornata) {
-        Fattura fatturaEsistente = this.findById(idFattura);
+        // La logica di validazione rimane
         if (!fatturaEsistente.getNumero().equals(fatturaAggiornata.getNumero()) &&
                 fatturaRepository.existsByNumero(fatturaAggiornata.getNumero())) {
             throw new BadRequestException("Esiste già una fattura con numero: " + fatturaAggiornata.getNumero());
@@ -60,6 +69,7 @@ public class FatturaService {
             throw new BadRequestException("L'importo della fattura deve essere maggiore di zero");
         }
 
+        // Aggiornamento campi (senza toccare l'ID)
         fatturaEsistente.setData(fatturaAggiornata.getData());
         fatturaEsistente.setImporto(fatturaAggiornata.getImporto());
         fatturaEsistente.setNumero(fatturaAggiornata.getNumero());
@@ -68,68 +78,76 @@ public class FatturaService {
 
         Fattura fatturaModificata = fatturaRepository.save(fatturaEsistente);
         log.info("Fattura con ID {} aggiornata con successo", idFattura);
-        return fatturaModificata;
+
+        return mapToResponseDTO(fatturaModificata);
     }
 
     public void delete(UUID idFattura) {
-        Fattura fattura = this.findById(idFattura);
+        Fattura fattura = this.findFatturaEntityById(idFattura);
         fatturaRepository.delete(fattura);
         log.info("Fattura numero {} eliminata con successo", fattura.getNumero());
     }
 
-    public Page<Fattura> findByFiltri(UUID idCliente, UUID idStato, LocalDate data, Integer anno,
-                                      Double minImporto, Double maxImporto, Pageable pageable) {
-
-        Specification<Fattura> spec = Specification.allOf();
-        if (idCliente != null) {
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("cliente").get("idCliente"), idCliente));
-        }
-        if (idStato != null) {
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("stato").get("idStato"), idStato));
-        }
-        if (data != null) {
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("data"), data));
-        }
-        if (anno != null) {
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(cb.function("YEAR", Integer.class, root.get("data")), anno));
-        }
-        if (minImporto != null) {
-            spec = spec.and((root, query, cb) ->
-                    cb.greaterThanOrEqualTo(root.get("importo"), minImporto));
-        }
-        if (maxImporto != null) {
-            spec = spec.and((root, query, cb) ->
-                    cb.lessThanOrEqualTo(root.get("importo"), maxImporto));
-        }
-
-        Page<Fattura> risultato = fatturaRepository.findAll(spec, pageable);
-        log.info("Trovate {} fatture con i filtri", risultato.getTotalElements());
-        return risultato;
-    }
-
-    public Fattura cambiaStato(UUID idFattura, UUID idNuovoStato) {
-        Fattura fattura = this.findById(idFattura);
+    public FatturaResponseDTO cambiaStato(UUID idFattura, UUID idNuovoStato) {
+        Fattura fattura = this.findFatturaEntityById(idFattura);
         StatoFattura nuovoStato = statoFatturaService.findById(idNuovoStato);
 
         fattura.setStato(nuovoStato);
         Fattura fatturaAggiornata = fatturaRepository.save(fattura);
         log.info("Stato della fattura {} cambiato in '{}'", fattura.getNumero(), nuovoStato.getStato());
-        return fatturaAggiornata;
+
+        return mapToResponseDTO(fatturaAggiornata);
     }
 
-    public Page<Fattura> findByCliente(UUID idCliente, Pageable pageable) {
-        return this.findByFiltri(idCliente, null, null, null, null, null, pageable);
+    public Page<FatturaResponseDTO> findByFiltri(UUID idCliente, UUID idStato, LocalDate data, Integer anno,
+                                                 Double minImporto, Double maxImporto, Pageable pageable) {
+
+        Specification<Fattura> spec = Specification.allOf();
+
+        if (idCliente != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("cliente").get("idCliente"), idCliente));
+        }
+        if (idStato != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("stato").get("idStato"), idStato));
+        }
+        if (data != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("data"), data));
+        }
+        if (anno != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(cb.function("YEAR", Integer.class, root.get("data")), anno));
+        }
+        if (minImporto != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("importo"), minImporto));
+        }
+        if (maxImporto != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("importo"), maxImporto));
+        }
+
+        Page<Fattura> risultatoEntita = fatturaRepository.findAll(spec, pageable);
+        log.info("Trovate {} fatture con i filtri", risultatoEntita.getTotalElements());
+
+        return risultatoEntita.map(this::mapToResponseDTO);
     }
 
-    public Page<Fattura> findByStato(UUID idStato, Pageable pageable) {
-        return this.findByFiltri(null, idStato, null, null, null, null, pageable);
+
+    private Fattura findFatturaEntityById(UUID idFattura) {
+        return fatturaRepository.findById(idFattura)
+                .orElseThrow(() -> new NotFoundException("La fattura con l'id " + idFattura + " non è stata trovata"));
     }
 
-    public Page<Fattura> findByAnno(Integer anno, Pageable pageable) {
-        return this.findByFiltri(null, null, null, anno, null, null, pageable);
+    private FatturaResponseDTO mapToResponseDTO(Fattura fattura) {
+        return FatturaResponseDTO.builder()
+                .idFattura(fattura.getIdFattura())
+                .numero(String.valueOf(fattura.getNumero()))
+                .data(fattura.getData())
+                .importoTotale(fattura.getImporto())
+
+                .idCliente(fattura.getCliente().getIdCliente())
+                .nomeCliente(fattura.getCliente().getRagioneSociale().name()) // Chiamo .name() perché è un Enum
+
+                .idStato(fattura.getStato().getIdStato())
+                .statoDescrizione(fattura.getStato().getStato())
+
+                .build();
     }
 }

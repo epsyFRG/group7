@@ -15,7 +15,7 @@ import java.util.UUID;
 @Table(name = "Ruolo")
 @Getter
 @Setter
-@ToString
+@ToString(exclude = {"utenti"})
 @NoArgsConstructor
 
 public class Ruolo {

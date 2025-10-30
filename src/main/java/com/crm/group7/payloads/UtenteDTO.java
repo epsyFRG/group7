@@ -1,8 +1,11 @@
 package com.crm.group7.payloads;
 
+import com.crm.group7.entities.enums.Ruoli;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import java.util.Set;
 
 public record UtenteDTO(
 
@@ -26,8 +29,11 @@ public record UtenteDTO(
 
         @NotBlank(message = "Il cognome è obbligatorio.")
         @Size(min = 2, max = 50, message = "Il cognome deve avere tra 2 e 50 caratteri.")
-        String cognome) {
+        String cognome,
+
+        Set<Ruoli> ruoli) {
 }
+
 
 
 
