@@ -16,6 +16,8 @@ public class FatturaResponseDTO {
     private Double importoTotale;
 
     private UUID idCliente;
+    private String nomeCliente;
+    private String emailCliente;
 
     private UUID idStato;
 

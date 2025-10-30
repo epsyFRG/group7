@@ -1,8 +1,10 @@
 package com.crm.group7.controller;
 
 import com.crm.group7.entities.Fattura;
+import com.crm.group7.payloads.ClienteDTO;
 import com.crm.group7.payloads.FatturaRequestDTO;
 import com.crm.group7.payloads.FatturaResponseDTO;
+import com.crm.group7.service.EmailService;
 import com.crm.group7.service.FatturaService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -21,9 +23,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/fatture")
 public class FatturaController {
-
     @Autowired
     private FatturaService fatturaService;
+    @Autowired
+    private EmailService emailService;
 
     // 1. LETTURA CON FILTRI e PAGINAZIONE (Ritorna Page di DTO)
     @GetMapping
@@ -60,8 +63,24 @@ public class FatturaController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('ADMIN')")
     public FatturaResponseDTO creaFattura(@RequestBody @Valid FatturaRequestDTO nuovaFatturaDTO) {
-        log.info("Creazione nuova fattura per cliente {}", nuovaFatturaDTO.getIdCliente());
-        return fatturaService.save(nuovaFatturaDTO);
+        FatturaResponseDTO nuovaFattura = fatturaService.save(nuovaFatturaDTO);
+
+        String emailCliente = nuovaFattura.getEmailCliente();
+
+        if (emailCliente != null) {
+            String codiceFattura = nuovaFattura.getNumero();
+
+            // 3. Invia la notifica via email
+            emailService.sendMailgunEmail(
+                    emailCliente,
+                    "Conferma Emissione Fattura " + codiceFattura,
+                    "Gentile Cliente, la tua fattura è stata emessa con successo."
+            );
+        } else {
+            log.warn("Email del cliente non disponibile per l'invio della notifica di fattura {}", nuovaFattura.getNumero());
+        }
+
+        return nuovaFattura;
     }
 
     // 4. AGGIORNAMENTO
