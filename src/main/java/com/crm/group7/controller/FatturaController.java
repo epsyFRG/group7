@@ -67,11 +67,9 @@ public class FatturaController {
     @PreAuthorize("hasAuthority('ADMIN')")
     public FatturaResponseDTO aggiornaFattura(
             @PathVariable UUID id,
-            @RequestBody @Valid FatturaRequestDTO fatturaAggiornataDTO // <-- 1. Aggiunto @Valid
-            // <-- 2. Usato il Request DTO
+            @RequestBody @Valid FatturaRequestDTO fatturaAggiornataDTO
     ) {
         log.info("Aggiornamento fattura con ID {}", id);
-        // 3. Assicurati che il service accetti il DTO
         return fatturaService.update(id, fatturaAggiornataDTO);
     }
 
