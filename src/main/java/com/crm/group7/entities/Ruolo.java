@@ -26,10 +26,14 @@ public class Ruolo {
     @Enumerated(EnumType.STRING)
     private Ruoli ruolo;
 
+    @Column(nullable = false)
+    private String nome;
+
     @ManyToMany(mappedBy = "ruoli")
     private List<Utente> utenti = new ArrayList<>();
 
     public Ruolo(Ruoli ruolo) {
         this.ruolo = ruolo;
+        this.nome = ruolo != null ? ruolo.name() : null;
     }
 }

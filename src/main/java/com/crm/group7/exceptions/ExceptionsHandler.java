@@ -35,7 +35,14 @@ public class ExceptionsHandler {
     @ExceptionHandler(Exception.class)
     public ErrorsDTO handleServerError(Exception ex) {
         ex.printStackTrace();
-        return new ErrorsDTO("Prima o poi si fixa, giuro", LocalDateTime.now());
+        // Estrai il messaggio dell'eccezione più profonda disponibile
+        Throwable cause = ex;
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        String message = cause.getMessage();
+        if (message == null || message.isBlank()) message = ex.getClass().getSimpleName();
+        return new ErrorsDTO(message, LocalDateTime.now());
     }
 
     @ExceptionHandler(UnauthorizedException.class)

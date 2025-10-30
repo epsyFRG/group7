@@ -16,7 +16,7 @@ export default function RegisterPage() {
     e.preventDefault()
     setMsg(null)
     try {
-      const res = await fetch("http://localhost:3001/auth/register", {
+      const res = await fetch("/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -25,7 +25,6 @@ export default function RegisterPage() {
           password,
           nome,
           cognome,
-          ruoli: null,
         }),
       })
 
@@ -38,11 +37,19 @@ export default function RegisterPage() {
         return
       }
 
-      const data = await res.json().catch(() => null)
+      const raw = await res.text().catch(() => "")
+      let data = null
+      try {
+        data = raw ? JSON.parse(raw) : null
+      } catch {
+        // ignore non-JSON error bodies
+      }
+
       let text = "Registrazione fallita"
       if (Array.isArray(data)) text = data.join(", ")
       else if (data?.message) text = data.message
       else if (data?.errors) text = JSON.stringify(data.errors)
+      else if (raw) text = raw
       setMsg({ variant: "danger", text })
     } catch {
       setMsg({ variant: "danger", text: "Errore di rete" })

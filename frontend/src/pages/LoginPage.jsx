@@ -13,7 +13,7 @@ export default function LoginPage() {
     e.preventDefault()
     setMsg(null)
     try {
-      const res = await fetch("http://localhost:3001/auth/login", {
+      const res = await fetch("/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -23,8 +23,9 @@ export default function LoginPage() {
         setMsg({ variant: "danger", text: data?.message || "Login fallito" })
         return
       }
-      if (data.token) {
-        localStorage.setItem("token", data.token)
+      const token = data.accessToken || data.token
+      if (token) {
+        localStorage.setItem("token", token)
         setMsg({ variant: "success", text: "Login effettuato" })
         setTimeout(() => navigate("/"), 700)
       } else {
@@ -64,6 +65,7 @@ export default function LoginPage() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••••"
                     required
                   />
                 </Form.Group>
