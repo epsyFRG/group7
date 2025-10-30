@@ -13,7 +13,7 @@ public class FatturaResponseDTO {
     private UUID idFattura;
     private String numero;
     private LocalDate data;
-    private Double importoTotale;
+    private Double importo;
 
     private UUID idCliente;
 

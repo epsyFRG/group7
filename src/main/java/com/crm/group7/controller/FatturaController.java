@@ -1,6 +1,5 @@
 package com.crm.group7.controller;
 
-import com.crm.group7.entities.Fattura;
 import com.crm.group7.payloads.FatturaRequestDTO;
 import com.crm.group7.payloads.FatturaResponseDTO;
 import com.crm.group7.service.FatturaService;
@@ -64,15 +63,16 @@ public class FatturaController {
         return fatturaService.save(nuovaFatturaDTO);
     }
 
-    // 4. AGGIORNAMENTO
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public FatturaResponseDTO aggiornaFattura(
             @PathVariable UUID id,
-            @RequestBody Fattura fatturaAggiornata
+            @RequestBody @Valid FatturaRequestDTO fatturaAggiornataDTO // <-- 1. Aggiunto @Valid
+            // <-- 2. Usato il Request DTO
     ) {
         log.info("Aggiornamento fattura con ID {}", id);
-        return fatturaService.update(id, fatturaAggiornata);
+        // 3. Assicurati che il service accetti il DTO
+        return fatturaService.update(id, fatturaAggiornataDTO);
     }
 
     // 5. CANCELLAZIONE (Solo ADMIN)

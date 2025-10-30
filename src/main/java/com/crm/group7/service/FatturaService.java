@@ -42,7 +42,7 @@ public class FatturaService {
         // Mappatura DTO -> Entità
         Fattura nuovaFattura = new Fattura();
         nuovaFattura.setNumero(dto.getNumero());
-        nuovaFattura.setImporto(dto.getImportoTotale());
+        nuovaFattura.setImporto(dto.getImporto());
         nuovaFattura.setData(dto.getData());
         nuovaFattura.setCliente(cliente);
         nuovaFattura.setStato(stato);
@@ -58,24 +58,23 @@ public class FatturaService {
         return mapToResponseDTO(fattura);
     }
 
-    public FatturaResponseDTO update(UUID idFattura, Fattura fatturaAggiornata) {
+    public FatturaResponseDTO update(UUID idFattura, FatturaRequestDTO dto) {
+
         Fattura fatturaEsistente = this.findFatturaEntityById(idFattura);
 
-        // La logica di validazione rimane
-        if (!fatturaEsistente.getNumero().equals(fatturaAggiornata.getNumero()) &&
-                fatturaRepository.existsByNumero(fatturaAggiornata.getNumero())) {
-            throw new BadRequestException("Esiste già una fattura con numero: " + fatturaAggiornata.getNumero());
-        }
-        if (fatturaAggiornata.getImporto() <= 0) {
-            throw new BadRequestException("L'importo della fattura deve essere maggiore di zero");
+        if (!fatturaEsistente.getNumero().equals(dto.getNumero()) &&
+                fatturaRepository.existsByNumero(dto.getNumero())) {
+            throw new BadRequestException("Esiste già una fattura con numero: " + dto.getNumero());
         }
 
-        // Aggiornamento campi (senza toccare l'ID)
-        fatturaEsistente.setData(fatturaAggiornata.getData());
-        fatturaEsistente.setImporto(fatturaAggiornata.getImporto());
-        fatturaEsistente.setNumero(fatturaAggiornata.getNumero());
-        fatturaEsistente.setCliente(fatturaAggiornata.getCliente());
-        fatturaEsistente.setStato(fatturaAggiornata.getStato());
+        Cliente cliente = clienteService.findClienteById(dto.getIdCliente());
+        StatoFattura stato = statoFatturaService.findById(dto.getIdStato());
+
+        fatturaEsistente.setData(dto.getData());
+        fatturaEsistente.setImporto(dto.getImporto());
+        fatturaEsistente.setNumero(dto.getNumero());
+        fatturaEsistente.setCliente(cliente);
+        fatturaEsistente.setStato(stato);
 
         Fattura fatturaModificata = fatturaRepository.save(fatturaEsistente);
         log.info("Fattura con ID {} aggiornata con successo", idFattura);
@@ -118,7 +117,7 @@ public class FatturaService {
 
         if (anno != null) {
             spec = spec.and((root, query, cb) -> {
-                // Usiamo la funzione "date_part" specifica di PostgreSQL
+                // Funzione "date_part" specifica di PostgreSQL
                 Expression<Integer> yearExpression = cb.function(
                         "date_part",
                         Integer.class,
@@ -158,7 +157,7 @@ public class FatturaService {
 
         if (cliente != null) {
             idCliente = cliente.getIdCliente();
-            // Controlliamo che ragioneSociale non sia null prima di chiamare .name()
+            // Controllo che ragioneSociale non sia null prima di chiamare .name()
             if (cliente.getRagioneSociale() != null) {
                 nomeCliente = cliente.getRagioneSociale().name();
             }
@@ -168,7 +167,7 @@ public class FatturaService {
                 .idFattura(fattura.getIdFattura())
                 .numero(String.valueOf(fattura.getNumero()))
                 .data(fattura.getData())
-                .importoTotale(fattura.getImporto())
+                .importo(fattura.getImporto())
 
                 // Dettagli Cliente
                 .idCliente(idCliente)
