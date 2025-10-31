@@ -1,20 +1,33 @@
 {
   "name": "frontend",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
+  "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
+  "keywords": [],
+  "license": "ISC",
+  "author": "fontend",
   "type": "module",
+  "main": "eslint.config.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "PORT=3001 react-scripts start",
+    "proxy": "http://localhost/3001"
+
   },
   "dependencies": {
     "bootstrap": "^5.3.8",
+    "cors": "^2.8.5",
+    "cross-env": "^10.1.0",
+    "express": "^5.1.0",
+    "npm": "^11.6.2",
     "react": "^19.1.1",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.1.1",
-    "react-router-dom": "^7.9.5"
+    "react-router-dom": "^7.9.5",
+    "start": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
