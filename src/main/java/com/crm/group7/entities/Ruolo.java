@@ -25,8 +25,7 @@ public class Ruolo {
     @Column(unique = true, nullable = false)
     @Enumerated(EnumType.STRING)
     private Ruoli ruolo;
-
-    @Column(nullable = false)
+    
     private String nome;
 
     @ManyToMany(mappedBy = "ruoli")
