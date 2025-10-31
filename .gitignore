@@ -34,3 +34,16 @@ build/
 
 #IGNORE env
 env.properties
+ 
+# Node
+frontend/node_modules/
+node_modules/
+
+# Frontend build
+frontend/dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
