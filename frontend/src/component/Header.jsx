@@ -1,87 +1,36 @@
-import { Container, Row, Col, Button } from "react-bootstrap";
-import React, { useState } from "react";
-import Form from "react-bootstrap/Form";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Navbar, Container, Nav } from "react-bootstrap";
+import { NavLink } from "react-router-dom";
+import logo from "../assets/dragon.png";
 
 const Header = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const [message, setMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  //aggiorna form
-  const handleChange = (event) => {
-    setFormData({
-      ...formData,
-      [event.target.name]: event.target.value,
-    });
-  };
-  //invia form e gestice login
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setMessage("");
-
-    try {
-      const response = await fetch("/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: formData.email,
-          password: formData.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Errore nel login");
-      }
-      console.log("Login riuscito :", data);
-      setMessage("Login effettuato con successo");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
-    <Container>
-      <Row>
-        <Col>
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3" controlId="formGroupEmail">
-              <Form.Label>Email address</Form.Label>
-              <Form.Control
-                type="email"
-                name="email"
-                placeholder="Enter email"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formGroupPassword">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </Form.Group>
-            <Button variant="primary" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Login in corso..." : "Login"}
-            </Button>
-            {message && (
-              <Alert variant="info" className="mt-3">
-                {message}
-              </Alert>
-            )}
-          </Form>
-        </Col>
-      </Row>
-    </Container>
+    <Navbar bg="dark" data-bs-theme="dark" expand="md">
+      <Container>
+        <Navbar.Brand as={NavLink} to="/">
+          <img
+            src={logo}
+            alt="CRM logo"
+            width={70}
+            height={40}
+            className="d-inline-block align-top me-2"
+            style={{ objectFit: "cover" }}
+          />
+          Epic Energy Services
+        </Navbar.Brand>
+        <Navbar.Toggle aria-controls="main-navbar" />
+        <Navbar.Collapse id="main-navbar">
+          <Nav className="ms-auto">
+            <Nav.Link as={NavLink} to="/login">
+              Login
+            </Nav.Link>
+            <Nav.Link as={NavLink} to="/register">
+              Register
+            </Nav.Link>
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
   );
 };
-
 export default Header;

@@ -47,22 +47,25 @@ public class UtenteService {
         );
 
         this.utenteRepository.findByEmail(payload.email()).ifPresent(utente -> {
-            throw new BadRequestException("L'email " + utente.getEmail() + " è già registrata!");
+            throw new BadRequestException("L'email '" + utente.getEmail() + "' è già registrata!");
         });
 
         Utente newUtente = new Utente(payload.username(), payload.email(), bcrypt.encode(payload.password()), payload.nome(), payload.cognome());
         newUtente.setAvatarURL("https://ui-avatars.com/api/?name=" + payload.nome());
 
-        // 1. Inizializza la lista dei ruoli dell'utente
-        List<Ruolo> ruoliDaAssegnare = payload.ruoli().stream()
-                // 2. Per ogni stringa di ruolo ("ADMIN", "UTENTE"), cercala nel DB
-                .map(ruolo -> ruoloRepository.findByRuolo(ruolo)
-                        .orElseThrow(() -> new RuntimeException("Ruolo '" + ruolo + "' non trovato nel database!")))
-                .toList();
+        // 1. Inizializza la lista dei ruoli dell'utente (gestisce anche ruoli null)
+        List<Ruolo> ruoliDaAssegnare = List.of();
+        if (payload.ruoli() != null && !payload.ruoli().isEmpty()) {
+            ruoliDaAssegnare = payload.ruoli().stream()
+                    // 2. Per ogni ruolo (ADMIN, UTENTE), cercalo nel DB
+                    .map(ruolo -> ruoloRepository.findByRuolo(ruolo)
+                            .orElseThrow(() -> new RuntimeException("Ruolo '" + ruolo + "' non trovato nel database!")))
+                    .toList();
+        }
 
         if (ruoliDaAssegnare.isEmpty()) {
             Ruolo userRole = ruoloRepository.findByRuolo(Ruoli.UTENTE)
-                    .orElseThrow(() -> new RuntimeException("Ruolo UTENTE non trovato!"));
+                    .orElseGet(() -> ruoloRepository.save(new Ruolo(Ruoli.UTENTE)));
             ruoliDaAssegnare = List.of(userRole);
         }
 
@@ -127,7 +130,7 @@ public class UtenteService {
 //    }
     public Utente findByEmail(String email) {
         return this.utenteRepository.findByEmail(email).orElseThrow(() ->
-                new NotFoundException("L'utente con la email'" + email + " non è statp trovato"));
+                new NotFoundException("L'utente con l'email '" + email + "' non è stato trovato"));
 
     }
 }
