@@ -13,13 +13,12 @@ public class FatturaResponseDTO {
     private UUID idFattura;
     private String numero;
     private LocalDate data;
-    private Integer anno;
-    private Double importoTotale;
+    private Double importo;
 
     private UUID idCliente;
     private String nomeCliente;
+    private String emailCliente;
 
     private UUID idStato;
-    private String statoDescrizione;
-    
+
 }

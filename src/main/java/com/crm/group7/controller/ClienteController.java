@@ -4,11 +4,13 @@ import com.crm.group7.entities.Cliente;
 import com.crm.group7.payloads.ClienteDTO;
 import com.crm.group7.service.ClienteService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +19,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/clienti")
+@Validated
 public class ClienteController {
 
     @Autowired
@@ -30,50 +33,55 @@ public class ClienteController {
     }
 
     @GetMapping("/{clienteId}")
-    // "abilitato alle sole operazioni di lettura"
     @PreAuthorize("hasAnyAuthority('ADMIN', 'UTENTE')")
-    public Cliente getClienteById(@PathVariable UUID clienteId) {
+    public Cliente getClienteById(
+            @PathVariable @NotNull UUID clienteId
+    ) {
         return clienteService.findClienteById(clienteId);
     }
 
     @PutMapping("/{clienteId}")
-    // "abilitato a tutte le operazioni" (solo ADMIN)
     @PreAuthorize("hasAuthority('ADMIN')")
-    public Cliente findClienteAndUpdate(@PathVariable UUID clienteId, @RequestBody @Valid ClienteDTO body) {
+    public Cliente findClienteAndUpdate(
+            @PathVariable @NotNull UUID clienteId,
+            @RequestBody @Valid ClienteDTO body
+    ) {
         return clienteService.findClienteAndUpdate(clienteId, body);
     }
 
     @DeleteMapping("/{clienteId}")
-    // "abilitato a tutte le operazioni" (solo ADMIN)
     @PreAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void findClienteAndDelete(@PathVariable UUID clienteId) {
+    public void findClienteAndDelete(
+            @PathVariable @NotNull UUID clienteId
+    ) {
         clienteService.findClienteAndDelete(clienteId);
     }
 
     @PatchMapping("/{clienteId}/logo")
-    // L'upload è una modifica, quindi solo ADMIN
     @PreAuthorize("hasAuthority('ADMIN')")
-    public Cliente uploadLogo(@PathVariable UUID clienteId, @RequestParam("logo") MultipartFile file) {
+    public Cliente uploadLogo(
+            @PathVariable @NotNull UUID clienteId,
+            @RequestParam("logo") MultipartFile file
+    ) {
         return clienteService.uploadLogo(clienteId, file);
     }
 
     @GetMapping
-    // "abilitato alle sole operazioni di lettura"
     @PreAuthorize("hasAnyAuthority('ADMIN', 'UTENTE')")
     public Page<Cliente> getClientiConFiltri(
 
-            // --- Parametri di Filtro ---
+            // Filtro
             @RequestParam(required = false) Double minFatturato,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInserimentoAfter,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataUltimoContattoBefore,
             @RequestParam(required = false) String nomeContains,
 
-            // --- Parametri di Paginazione ---
+            // Paginazione
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
 
-            // --- Parametri di Ordinamento ---
+            // Ordinamento
             @RequestParam(defaultValue = "idCliente") String sortBy,
             @RequestParam(defaultValue = "ASC") String sortDir
     ) {
@@ -89,4 +97,3 @@ public class ClienteController {
         );
     }
 }
-

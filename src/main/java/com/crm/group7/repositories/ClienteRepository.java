@@ -19,4 +19,16 @@ public interface ClienteRepository extends JpaRepository<Cliente, UUID>, JpaSpec
             "JOIN co.provincia p " +
             "WHERE i.tipoIndirizzo = com.crm.group7.entities.enums.TipoIndirizzo.SEDE_LEGALE")
     Page<Cliente> findAllSortedByProvinciaSedeLegale(Pageable pageable);
+
+    boolean existsByPartitaIva(String partitaIva);
+
+    boolean existsByPec(String pec);
+
+    boolean existsByEmailContatto(String emailContatto);
+    
+    boolean existsByPartitaIvaAndIdClienteNot(String partitaIva, UUID idCliente);
+
+    boolean existsByPecAndIdClienteNot(String pec, UUID idCliente);
+
+    boolean existsByEmailContattoAndIdClienteNot(String emailContatto, UUID idCliente);
 }
