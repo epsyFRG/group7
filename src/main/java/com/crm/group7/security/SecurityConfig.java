@@ -21,11 +21,11 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // Fondamentale per far funzionare @PreAuthorize
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Autowired
-    private JWTFilter jwtFilter; // <-- Inietta il tuo filtro
+    private JWTFilter jwtFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -48,7 +48,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public static PasswordEncoder getBCrypt() { // <-- AGGIUNTO 'static'
+    public static PasswordEncoder getBCrypt() {
         // Rendere questo @Bean statico rompe la dipendenza ciclica
         // tra SecurityConfig, JWTFilter, UtenteService, e PasswordEncoder.
         return new BCryptPasswordEncoder(12);
