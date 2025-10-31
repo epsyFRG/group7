@@ -1,7 +1,6 @@
 package com.crm.group7.controller;
 
 import com.crm.group7.entities.Fattura;
-import com.crm.group7.payloads.ClienteDTO;
 import com.crm.group7.payloads.FatturaRequestDTO;
 import com.crm.group7.payloads.FatturaResponseDTO;
 import com.crm.group7.service.EmailService;
@@ -65,12 +64,14 @@ public class FatturaController {
     public FatturaResponseDTO creaFattura(@RequestBody @Valid FatturaRequestDTO nuovaFatturaDTO) {
         FatturaResponseDTO nuovaFattura = fatturaService.save(nuovaFatturaDTO);
 
+        // Recupera l'indirizzo email del cliente dalla fattura appena creata
         String emailCliente = nuovaFattura.getEmailCliente();
 
         if (emailCliente != null) {
+            // Recupera il codice o numero identificativo della fattura
             String codiceFattura = nuovaFattura.getNumero();
 
-            // 3. Invia la notifica via email
+            // Invia la notifica via email
             emailService.sendMailgunEmail(
                     emailCliente,
                     "Conferma Emissione Fattura " + codiceFattura,
