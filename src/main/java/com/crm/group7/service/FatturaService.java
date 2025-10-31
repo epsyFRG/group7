@@ -103,7 +103,7 @@ public class FatturaService {
                                                  Double minImporto, Double maxImporto, Pageable pageable) {
 
         // Inizializza una Specification "vuota" che non filtra nulla
-        Specification<Fattura> spec = Specification.where(null);
+        Specification<Fattura> spec = Specification.allOf();
 
         if (idCliente != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("cliente").get("idCliente"), idCliente));
@@ -154,6 +154,7 @@ public class FatturaService {
         Cliente cliente = fattura.getCliente();
         UUID idCliente = null;
         String nomeCliente = null; // Valore di default
+        String emailContatto = null;
 
         if (cliente != null) {
             idCliente = cliente.getIdCliente();
@@ -161,6 +162,8 @@ public class FatturaService {
             if (cliente.getRagioneSociale() != null) {
                 nomeCliente = cliente.getRagioneSociale().name();
             }
+
+            emailContatto = cliente.getEmailContatto();
         }
 
         return FatturaResponseDTO.builder()
@@ -171,6 +174,7 @@ public class FatturaService {
 
                 // Dettagli Cliente
                 .idCliente(idCliente)
+                .emailCliente(emailContatto)
 
                 // Dettagli Stato
                 .idStato(fattura.getStato().getIdStato())
